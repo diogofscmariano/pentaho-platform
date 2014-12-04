@@ -55,6 +55,8 @@ public class RepositoryFileDto implements Serializable {
 
   boolean hidden;
 
+  boolean shadow;
+
   boolean versioned;
 
   String versionId;
@@ -175,6 +177,14 @@ public class RepositoryFileDto implements Serializable {
 
   public void setHidden( boolean hidden ) {
     this.hidden = hidden;
+  }
+
+  public boolean isShadow() {
+    return shadow;
+  }
+
+  public void setShadow( boolean shadow ) {
+    this.shadow = shadow;
   }
 
   public boolean isVersioned() {
@@ -304,11 +314,12 @@ public class RepositoryFileDto implements Serializable {
   public String toString() {
     return "RepositoryFileDto [id=" + id + ", name=" + name + ", path=" + path + ", folder=" + folder + ", size="
         + fileSize + ", createdDate=" + createdDate + ", creatorId=" + creatorId + ", deletedDate=" + deletedDate
-        + ", description=" + description + ", hidden=" + hidden + ", lastModifiedDate=" + lastModifiedDate
-        + ", locale=" + locale + ", lockDate=" + lockDate + ", lockMessage=" + lockMessage + ", lockOwner=" + lockOwner
-        + ", locked=" + locked + ", originalParentFolderPath=" + originalParentFolderPath + ", owner=" + owner
-        + ", ownerType=" + ownerType + ", title=" + title + ", localePropertiesMapEntries="
-        + localePropertiesMapEntries + ", versionId=" + versionId + ", versioned=" + versioned + ", hasAcl=" + (repositoryFileAclDto != null) + "]";
+        + ", description=" + description + ", hidden=" + hidden + ", shadow=" + shadow + ", lastModifiedDate="
+        + lastModifiedDate + ", locale=" + locale + ", lockDate=" + lockDate + ", lockMessage=" + lockMessage
+        + ", lockOwner=" + lockOwner + ", locked=" + locked + ", originalParentFolderPath=" + originalParentFolderPath
+        + ", owner=" + owner + ", ownerType=" + ownerType + ", title=" + title + ", localePropertiesMapEntries="
+        + localePropertiesMapEntries + ", versionId=" + versionId + ", versioned=" + versioned + ", hasAcl="
+        + ( repositoryFileAclDto != null ) + "]";
   }
 
 }

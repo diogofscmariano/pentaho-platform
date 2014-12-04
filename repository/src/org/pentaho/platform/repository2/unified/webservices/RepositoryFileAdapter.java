@@ -86,6 +86,9 @@ public class RepositoryFileAdapter extends XmlAdapter<RepositoryFileDto, Reposit
     if ( include( "hidden", memberSet, exclude ) ) {
       f.hidden = v.isHidden();
     }
+    if ( include( "shadow", memberSet, exclude ) ) {
+      f.shadow = v.isShadow();
+    }
     if ( include( "createDate", memberSet, exclude ) ) {
       f.createdDate = v.getCreatedDate();
     }
