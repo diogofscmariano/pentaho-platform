@@ -27,11 +27,17 @@ import org.pentaho.metadata.repository.DomainAlreadyExistsException;
 import org.pentaho.metadata.repository.DomainIdNullException;
 import org.pentaho.metadata.repository.DomainStorageException;
 import org.pentaho.metadata.util.XmiParser;
+import org.pentaho.platform.api.repository2.unified.IUnifiedRepository;
+import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
+import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.plugin.services.importer.mimeType.MimeType;
 import org.pentaho.platform.plugin.services.importexport.PentahoMetadataFileInfo;
 import org.pentaho.platform.plugin.services.metadata.IPentahoMetadataDomainRepositoryImporter;
 import org.pentaho.platform.repository.RepositoryFilenameUtils;
 import org.pentaho.platform.repository.messages.Messages;
+import org.pentaho.platform.repository2.unified.IRepositoryFileAclDao;
+import org.pentaho.platform.repository2.unified.jcr.IAclShadowNodeHelper;
+import org.pentaho.platform.repository2.unified.jcr.JcrAclShadowNodeHelper;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -54,6 +60,7 @@ public class MetadataImportHandler implements IPlatformImportHandler {
   private List<MimeType> mimeTypes;
 
   IPentahoMetadataDomainRepositoryImporter metadataRepositoryImporter;
+  private IAclShadowNodeHelper aclHelper;
 
   public MetadataImportHandler( List<MimeType> mimeTypes,
                                 final IPentahoMetadataDomainRepositoryImporter metadataImporter ) {
@@ -100,6 +107,14 @@ public class MetadataImportHandler implements IPlatformImportHandler {
       }
 
       metadataRepositoryImporter.storeDomain( inputStream, domainId, bundle.overwriteInRepository() );
+      if ( aclHelper == null ) {
+        // TODO: replace with PentahoSystem.get() when it will be included to Spring configuration or add to constructor
+        aclHelper = new JcrAclShadowNodeHelper( PentahoSystem.get( IUnifiedRepository.class ),
+          "/public" );
+      }
+      if ( bundle.isApplyAclSettings() ) {
+        aclHelper.setAclFor( domainId, IAclShadowNodeHelper.DatasourceType.METADATA, bundle.getAcl() );
+      }
       return domainId;
     } catch ( DomainIdNullException dine ) {
       throw new PlatformImportException( dine.getMessage(), PlatformImportException.PUBLISH_TO_SERVER_FAILED, dine );

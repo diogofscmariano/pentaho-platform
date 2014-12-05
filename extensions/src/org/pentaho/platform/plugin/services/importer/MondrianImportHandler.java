@@ -30,13 +30,17 @@ import mondrian.util.Pair;
 import org.pentaho.metadata.repository.DomainAlreadyExistsException;
 import org.pentaho.metadata.repository.DomainIdNullException;
 import org.pentaho.metadata.repository.DomainStorageException;
+import org.pentaho.platform.api.repository2.unified.IUnifiedRepository;
 import org.pentaho.platform.api.repository2.unified.RepositoryFile;
 import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
+import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.plugin.action.mondrian.catalog.IMondrianCatalogService;
 import org.pentaho.platform.plugin.action.mondrian.catalog.MondrianCatalog;
 import org.pentaho.platform.plugin.action.mondrian.catalog.MondrianCatalogServiceException;
 import org.pentaho.platform.plugin.action.mondrian.catalog.MondrianCatalogServiceException.Reason;
 import org.pentaho.platform.plugin.services.importer.mimeType.MimeType;
+import org.pentaho.platform.repository2.unified.jcr.IAclShadowNodeHelper;
+import org.pentaho.platform.repository2.unified.jcr.JcrAclShadowNodeHelper;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -60,6 +64,7 @@ public class MondrianImportHandler implements IPlatformImportHandler {
 
   private List<MimeType> mimeTypes;
   IMondrianCatalogService mondrianRepositoryImporter;
+  private IAclShadowNodeHelper aclHelper;
 
   public MondrianImportHandler( List<MimeType> mimeTypes, final IMondrianCatalogService mondrianImporter ) {
     if ( mondrianImporter == null ) {
@@ -95,6 +100,14 @@ public class MondrianImportHandler implements IPlatformImportHandler {
       MondrianCatalog catalog = this.createCatalogObject( domainId, xmla, bundle );
       mondrianRepositoryImporter.addCatalog( bundle.getInputStream(), catalog, overwriteInRepossitory,
           PentahoSessionHolder.getSession() );
+      if ( aclHelper == null ) {
+        // TODO: replace with PentahoSystem.get() when it will be included to Spring configuration or add to constructor
+        aclHelper = new JcrAclShadowNodeHelper( PentahoSystem.get( IUnifiedRepository.class ),
+          "/public" );
+      }
+      if ( bundle.isApplyAclSettings() ) {
+        aclHelper.setAclFor( domainId, IAclShadowNodeHelper.DatasourceType.MONDRIAN, bundle.getAcl() );
+      }
     } catch ( MondrianCatalogServiceException mse ) {
       int statusCode = convertExceptionToStatus( mse );
       throw new PlatformImportException( mse.getMessage(), statusCode );
