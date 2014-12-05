@@ -98,7 +98,7 @@ abstract class AbstractCommand<T> implements Callable<T> {
 
     return repository.createFile(
       folder.getId(),
-      new RepositoryFile.Builder( resolvedDsName ).build(),
+      new RepositoryFile.Builder( resolvedDsName ).shadow( true ).build(),
       new SampleRepositoryFileData( "", false, 0 ), ""
     );
   }
