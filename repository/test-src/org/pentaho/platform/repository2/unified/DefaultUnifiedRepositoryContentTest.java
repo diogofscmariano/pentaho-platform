@@ -361,7 +361,7 @@ public class DefaultUnifiedRepositoryContentTest extends DefaultUnifiedRepositor
     login( USERNAME_SUZY, tenantAcme, new String[] { tenantAuthenticatedRoleName } );
 
     RepositoryFile parentFolder = repo.getFile( ClientRepositoryPaths.getUserHomeFolderPath( USERNAME_SUZY ) );
-    RepositoryFile newFolder = new RepositoryFile.Builder( "test" ).folder( true ).hidden( true ).shadow( false ).build();
+    RepositoryFile newFolder = new RepositoryFile.Builder( "test" ).folder( true ).hidden( true ).build();
 
     Date beginTime = Calendar.getInstance().getTime();
 
@@ -376,7 +376,7 @@ public class DefaultUnifiedRepositoryContentTest extends DefaultUnifiedRepositor
     assertNotNull( newFolder );
     assertNotNull( newFolder.getId() );
     assertTrue( newFolder.isHidden() );
-    assertFalse( newFolder.isShadow() );
+    assertFalse( newFolder.isAclNode() );
     assertNotNull( SimpleJcrTestUtils.getItem( testJcrTemplate, ServerRepositoryPaths.getUserHomeFolderPath(
         tenantAcme, USERNAME_SUZY )
         + "/test" ) );
@@ -396,7 +396,7 @@ public class DefaultUnifiedRepositoryContentTest extends DefaultUnifiedRepositor
     login( USERNAME_SUZY, tenantAcme, new String[] { tenantAuthenticatedRoleName } );
 
     RepositoryFile parentFolder = repo.getFile( ClientRepositoryPaths.getUserHomeFolderPath( USERNAME_SUZY ) );
-    RepositoryFile newFolder = new RepositoryFile.Builder( "test" ).folder( true ).shadow( true ).build();
+    RepositoryFile newFolder = new RepositoryFile.Builder( "test" ).folder( true ).aclNode( true ).build();
 
     Date beginTime = Calendar.getInstance().getTime();
 
@@ -410,7 +410,7 @@ public class DefaultUnifiedRepositoryContentTest extends DefaultUnifiedRepositor
     assertTrue( endTime.after( newFolder.getCreatedDate() ) );
     assertNotNull( newFolder );
     assertNotNull( newFolder.getId() );
-    assertTrue( newFolder.isShadow() );
+    assertTrue( newFolder.isAclNode() );
     assertNotNull( SimpleJcrTestUtils.getItem( testJcrTemplate, ServerRepositoryPaths.getUserHomeFolderPath(
         tenantAcme, USERNAME_SUZY )
         + "/test" ) );
@@ -798,7 +798,8 @@ public class DefaultUnifiedRepositoryContentTest extends DefaultUnifiedRepositor
 
     NodeRepositoryFileData data = new NodeRepositoryFileData( node );
     RepositoryFile newFile =
-        repo.createFile( parentFolder.getId(), new RepositoryFile.Builder( expectedName ).shadow( true ).build(), data, null );
+        repo.createFile( parentFolder.getId(), new RepositoryFile.Builder( expectedName ).aclNode( true ).build(), data,
+            null );
 
     assertNotNull( newFile.getId() );
     RepositoryFile foundFile = repo.getFile( expectedPath );

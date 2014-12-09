@@ -54,7 +54,7 @@ public class HierarchyNodeNtdProvider implements NodeTypeDefinitionProvider {
     t.getNodeDefinitionTemplates().add( getMetadataNode( ntMgr ) );
     t.getNodeDefinitionTemplates().add( getLocaleNode( ntMgr ) );
     t.getPropertyDefinitionTemplates().add( getHiddenProperty( ntMgr, vFac ) );
-    t.getPropertyDefinitionTemplates().add( getShadowProperty( ntMgr, vFac ) );
+    t.getPropertyDefinitionTemplates().add( getAclNodeProperty( ntMgr, vFac ) );
     return t;
   }
 
@@ -69,10 +69,10 @@ public class HierarchyNodeNtdProvider implements NodeTypeDefinitionProvider {
     return t;
   }
 
-  private PropertyDefinitionTemplate getShadowProperty( final NodeTypeManager ntMgr, final ValueFactory vFac )
+  private PropertyDefinitionTemplate getAclNodeProperty( final NodeTypeManager ntMgr, final ValueFactory vFac )
       throws RepositoryException {
     PropertyDefinitionTemplate t = ntMgr.createPropertyDefinitionTemplate();
-    t.setName( PHO + "shadow" ); //$NON-NLS-1$
+    t.setName( PHO + "aclNode" ); //$NON-NLS-1$
     t.setRequiredType( PropertyType.BOOLEAN );
     t.setDefaultValues( new Value[]{ vFac.createValue( false ) } );
     t.setOnParentVersion( OnParentVersionAction.COPY );

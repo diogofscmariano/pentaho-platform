@@ -86,8 +86,8 @@ public class RepositoryFileAdapter extends XmlAdapter<RepositoryFileDto, Reposit
     if ( include( "hidden", memberSet, exclude ) ) {
       f.hidden = v.isHidden();
     }
-    if ( include( "shadow", memberSet, exclude ) ) {
-      f.shadow = v.isShadow();
+    if ( include( "aclNode", memberSet, exclude ) ) {
+      f.aclNode = v.isAclNode();
     }
     if ( include( "createDate", memberSet, exclude ) ) {
       f.createdDate = v.getCreatedDate();
@@ -223,7 +223,7 @@ public class RepositoryFileAdapter extends XmlAdapter<RepositoryFileDto, Reposit
       .folder( v.folder ).fileSize( v.fileSize ).lastModificationDate( v.lastModifiedDate ).locale( v.locale )
       .lockDate( v.lockDate ).locked( v.locked ).lockMessage( v.lockMessage ).lockOwner( v.lockOwner )
       .title( v.title ).versioned( v.versioned ).versionId( v.versionId ).originalParentFolderPath(
-        v.originalParentFolderPath ).deletedDate( v.deletedDate ).hidden( v.hidden ).build();
+        v.originalParentFolderPath ).deletedDate( v.deletedDate ).hidden( v.hidden ).aclNode( v.aclNode ).build();
   }
 
   private static DefaultUnifiedRepositoryWebService getRepoWs() {

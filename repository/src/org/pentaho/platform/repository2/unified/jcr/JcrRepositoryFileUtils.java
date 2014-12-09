@@ -221,8 +221,8 @@ public class JcrRepositoryFileUtils {
     if ( node.hasProperty( pentahoJcrConstants.getPHO_FILESIZE() ) ) {
       fileSize = node.getProperty( pentahoJcrConstants.getPHO_FILESIZE() ).getLong();
     }
-    if ( node.hasProperty( pentahoJcrConstants.getPHO_SHADOW() ) ) {
-      shadow = node.getProperty( pentahoJcrConstants.getPHO_SHADOW() ).getBoolean();
+    if ( node.hasProperty( pentahoJcrConstants.getPHO_ACLNODE() ) ) {
+      shadow = node.getProperty( pentahoJcrConstants.getPHO_ACLNODE() ).getBoolean();
     }
     if ( isPentahoFile( pentahoJcrConstants, node ) ) {
       // pho:lastModified nodes have OnParentVersion values of IGNORE; i.e. they don't exist in frozen nodes
@@ -304,7 +304,7 @@ public class JcrRepositoryFileUtils {
             lastModified ).folder( folder ).versioned( versioned ).path( path ).versionId( versionId ).fileSize(
             fileSize ).locked( locked ).lockDate( lockDate ).hidden( hidden ).lockMessage( lockMessage ).lockOwner(
             lockOwner ).title( title ).description( description ).locale( pentahoLocale.toString() )
-            .localePropertiesMap( localePropertiesMap ).shadow( shadow ).build();
+            .localePropertiesMap( localePropertiesMap ).aclNode( shadow ).build();
 
     return file;
   }
@@ -556,7 +556,7 @@ public class JcrRepositoryFileUtils {
     String encodedfolderName = JcrStringHelper.fileNameEncode( folder.getName() );
     Node folderNode = parentFolderNode.addNode( encodedfolderName, pentahoJcrConstants.getPHO_NT_PENTAHOFOLDER() );
     folderNode.setProperty( pentahoJcrConstants.getPHO_HIDDEN(), folder.isHidden() );
-    folderNode.setProperty( pentahoJcrConstants.getPHO_SHADOW(), folder.isShadow() );
+    folderNode.setProperty( pentahoJcrConstants.getPHO_ACLNODE(), folder.isAclNode() );
     // folderNode.setProperty(pentahoJcrConstants.getPHO_TITLE(), folder.getTitle());
     Node localeNodes = null;
     if ( folder.getTitle() != folder.getName() ) { // Title is different from the name
@@ -599,7 +599,7 @@ public class JcrRepositoryFileUtils {
     fileNode.setProperty( pentahoJcrConstants.getPHO_LASTMODIFIED(), Calendar.getInstance() );
     fileNode.setProperty( pentahoJcrConstants.getPHO_HIDDEN(), file.isHidden() );
     fileNode.setProperty( pentahoJcrConstants.getPHO_FILESIZE(), content.getDataSize() );
-    fileNode.setProperty( pentahoJcrConstants.getPHO_SHADOW(), file.isShadow() );
+    fileNode.setProperty( pentahoJcrConstants.getPHO_ACLNODE(), file.isAclNode() );
     if ( file.getLocalePropertiesMap() != null && !file.getLocalePropertiesMap().isEmpty() ) {
       Node localeNodes =
           fileNode.addNode( pentahoJcrConstants.getPHO_LOCALES(), pentahoJcrConstants.getPHO_NT_LOCALE() );
@@ -646,7 +646,7 @@ public class JcrRepositoryFileUtils {
     fileNode.setProperty( pentahoJcrConstants.getPHO_LASTMODIFIED(), Calendar.getInstance() );
     fileNode.setProperty( pentahoJcrConstants.getPHO_HIDDEN(), file.isHidden() );
     fileNode.setProperty( pentahoJcrConstants.getPHO_FILESIZE(), content.getDataSize() );
-    fileNode.setProperty( pentahoJcrConstants.getPHO_SHADOW(), file.isShadow() );
+    fileNode.setProperty( pentahoJcrConstants.getPHO_ACLNODE(), file.isAclNode() );
     if ( file.getLocalePropertiesMap() != null && !file.getLocalePropertiesMap().isEmpty() ) {
       Node localePropertiesMapNode = null;
       if ( !fileNode.hasNode( pentahoJcrConstants.getPHO_LOCALES() ) ) {
@@ -681,7 +681,7 @@ public class JcrRepositoryFileUtils {
     preventLostUpdate( session, pentahoJcrConstants, folder );
 
     folderNode.setProperty( pentahoJcrConstants.getPHO_HIDDEN(), folder.isHidden() );
-    folderNode.setProperty( pentahoJcrConstants.getPHO_SHADOW(), folder.isShadow() );
+    folderNode.setProperty( pentahoJcrConstants.getPHO_ACLNODE(), folder.isAclNode() );
     if ( folder.getLocalePropertiesMap() != null && !folder.getLocalePropertiesMap().isEmpty() ) {
       Node localePropertiesMapNode = null;
       if ( !folderNode.hasNode( pentahoJcrConstants.getPHO_LOCALES() ) ) {
@@ -735,7 +735,7 @@ public class JcrRepositoryFileUtils {
       if ( isSupportedNodeType( pentahoJcrConstants, node ) ) {
         RepositoryFile file = nodeToFile( session, pentahoJcrConstants, pathConversionHelper, lockHelper, node );
         if ( !repositoryRequest.isShowHidden() ) {
-          if ( !file.isHidden() && !file.isShadow() ) {
+          if ( !file.isHidden() && !file.isAclNode() ) {
             children.add( file );
           }
         } else {

@@ -103,7 +103,7 @@ public class PentahoJcrConstants extends JcrConstants {
 
   private static String PHO_ACL_MANAGEMENT_PRIVILEGE = "aclManagement"; //$NON-NLS-1$
 
-  private static String PHO_SHADOW = "shadow";
+  private static String PHO_ACLNODE = "aclNode";
 
   /**
    * Same abstraction as {@code Locale.ROOT}.
@@ -235,6 +235,6 @@ public class PentahoJcrConstants extends JcrConstants {
     return resolveName( PHO_NS, PHO_ACL_MANAGEMENT_PRIVILEGE );
   }
 
-  public String getPHO_SHADOW() { return resolveName( PHO_NS, PHO_SHADOW ); }
+  public String getPHO_ACLNODE() { return resolveName( PHO_NS, PHO_ACLNODE ); }
 
 }

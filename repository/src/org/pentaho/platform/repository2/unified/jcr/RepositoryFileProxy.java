@@ -52,7 +52,7 @@ public class RepositoryFileProxy extends RepositoryFile {
   private String name;
   private String versionId;
   private Date createdDate;
-  private Boolean shadow;
+  private Boolean aclNode;
 
   public RepositoryFileProxy( final Node node, final JcrTemplate template, IPentahoLocale pentahoLocale ) {
     super( null, null, false, false, false, null, null, null, null, false, null, null, null, null, null, null, null,
@@ -576,14 +576,14 @@ public class RepositoryFileProxy extends RepositoryFile {
   }
 
   @Override
-  public boolean isShadow() {
-    if ( shadow == null ) {
+  public boolean isAclNode() {
+    if ( aclNode == null ) {
       this.executeOperation( new SessionOperation() {
         @Override
         public void execute( Session session ) {
           try {
-            if ( node.hasProperty( getPentahoJcrConstants().getPHO_SHADOW() ) ) {
-              shadow = node.getProperty( getPentahoJcrConstants().getPHO_SHADOW() ).getBoolean();
+            if ( node.hasProperty( getPentahoJcrConstants().getPHO_ACLNODE() ) ) {
+              aclNode = node.getProperty( getPentahoJcrConstants().getPHO_ACLNODE() ).getBoolean();
             }
           } catch ( RepositoryException e ) {
             e.printStackTrace(); // To change body of catch statement use File | Settings | File Templates.
@@ -592,7 +592,7 @@ public class RepositoryFileProxy extends RepositoryFile {
       } );
     }
     // exclude NPE
-    return shadow == null ? false : shadow;
+    return aclNode == null ? false : aclNode;
   }
 
   @Override

@@ -142,9 +142,13 @@ public class RepositoryFile implements Comparable<RepositoryFile>, Serializable 
   private final Map<String, Properties> localePropertiesMap;
 
   /**
-   * A boolean describing if a repository file is shadow or not
+   * A boolean describing if a repository file is acl node or not. The purpose of a acl node is to be a placeholder
+   * for ACLs on another node which cannot have such ACLs on it's own. An example of such a scenario is one where the
+   * node being shadowed is in an area of the repository which prevents any access (/etc/*). Subsystems can create a
+   * acl node in this case to store and check access rules (ACLs), while still preserving the original acled node
+   * in the restricted area.
    */
-  private final boolean shadow;
+  private final boolean aclNode;
 
   // ~ Constructors
   // ===================================================================================================
@@ -156,7 +160,7 @@ public class RepositoryFile implements Comparable<RepositoryFile>, Serializable 
       Serializable versionId, String path, Date createdDate, Date lastModifiedDate, boolean locked, String lockOwner,
       String lockMessage, Date lockDate, String locale, String title, String description,
       String originalParentFolderPath, Date deletedDate, long fileSize, String creatorId,
-      Map<String, Properties> localePropertiesMap, boolean shadow ) {
+      Map<String, Properties> localePropertiesMap, boolean aclNode ) {
     super();
     this.id = id;
     this.name = name;
@@ -182,7 +186,7 @@ public class RepositoryFile implements Comparable<RepositoryFile>, Serializable 
     this.creatorId = creatorId;
     this.localePropertiesMap =
         localePropertiesMap != null ? new HashMap<String, Properties>( localePropertiesMap ) : null;
-    this.shadow = shadow;
+    this.aclNode = aclNode;
   }
 
   /*
@@ -300,8 +304,8 @@ public class RepositoryFile implements Comparable<RepositoryFile>, Serializable 
     return deletedDate != null ? new Date( deletedDate.getTime() ) : null;
   }
 
-  public boolean isShadow() {
-    return shadow;
+  public boolean isAclNode() {
+    return aclNode;
   }
 
   @Override
@@ -353,7 +357,7 @@ public class RepositoryFile implements Comparable<RepositoryFile>, Serializable 
 
     private Date deletedDate;
 
-    private boolean shadow;
+    private boolean aclNode;
 
     public Builder( final String name ) {
       this.name = name;
@@ -374,14 +378,14 @@ public class RepositoryFile implements Comparable<RepositoryFile>, Serializable 
           other.getLockOwner() ).lockMessage( other.getLockMessage() ).title( other.getTitle() ).description(
           other.getDescription() ).locale( other.getLocale() ).originalParentFolderPath(
           other.getOriginalParentFolderPath() ).deletedDate( other.getDeletedDate() ).localePropertiesMap(
-          other.getLocalePropertiesMap() ).shadow( other.isShadow() );
+          other.getLocalePropertiesMap() ).aclNode( other.isAclNode() );
     }
 
     public RepositoryFile build() {
       return new RepositoryFile( id, name, this.folder, this.hidden, this.versioned, this.versionId, this.path,
           this.createdDate, this.lastModifiedDate, this.locked, this.lockOwner, this.lockMessage, this.lockDate,
           this.locale, this.title, this.description, this.originalParentFolderPath, this.deletedDate, this.fileSize,
-          this.creatorId, this.localePropertiesMap, this.shadow );
+          this.creatorId, this.localePropertiesMap, this.aclNode );
     }
 
     public Builder createdDate( final Date createdDate1 ) {
@@ -547,8 +551,8 @@ public class RepositoryFile implements Comparable<RepositoryFile>, Serializable 
       return this;
     }
 
-    public Builder shadow( final boolean shadow1 ) {
-      this.shadow = shadow1;
+    public Builder aclNode( final boolean aclNode1 ) {
+      this.aclNode = aclNode1;
       return this;
     }
 
