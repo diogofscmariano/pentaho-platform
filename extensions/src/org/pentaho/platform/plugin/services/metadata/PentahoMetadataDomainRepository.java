@@ -35,9 +35,12 @@ import org.pentaho.platform.api.repository2.unified.RepositoryFile;
 import org.pentaho.platform.api.repository2.unified.RepositoryFileAcl;
 import org.pentaho.platform.api.repository2.unified.UnifiedRepositoryException;
 import org.pentaho.platform.api.repository2.unified.data.simple.SimpleRepositoryFileData;
+import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.plugin.services.messages.Messages;
 import org.pentaho.platform.repository2.unified.RepositoryUtils;
 import org.pentaho.platform.repository2.unified.fileio.RepositoryFileInputStream;
+import org.pentaho.platform.repository2.unified.jcr.IAclShadowNodeHelper;
+import org.pentaho.platform.repository2.unified.jcr.JcrAclShadowNodeHelper;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -113,6 +116,8 @@ public class PentahoMetadataDomainRepository implements IMetadataDomainRepositor
   // The localization utility class (used to load side-car properties files into a Domain object)
   private LocalizationUtil localizationUtil;
 
+  private IAclShadowNodeHelper aclHelper;
+
   /**
    * Creates an instance of this class providing the {@link IUnifiedRepository} repository backend.
    * 
@@ -180,7 +185,7 @@ public class PentahoMetadataDomainRepository implements IMetadataDomainRepositor
       xmi = xmiParser.generateXmi( domain );
       //final InputStream inputStream = new ByteArrayInputStream( xmi.getBytes( DEFAULT_ENCODING ) );
       final InputStream inputStream = new ByteArrayInputStream( xmi.getBytes( "UTF8" ) );
-      storeDomain( inputStream, domain.getId(), overwrite );
+      storeDomain( inputStream, domain.getId(), overwrite, null );
     } catch ( DomainStorageException dse ) {
       throw dse;
     } catch ( DomainAlreadyExistsException dae ) {
@@ -202,7 +207,7 @@ public class PentahoMetadataDomainRepository implements IMetadataDomainRepositor
    * @param overwrite
    */
   @Override
-  public void storeDomain( final InputStream inputStream, final String domainId, final boolean overwrite )
+  public void storeDomain( InputStream inputStream, String domainId, boolean overwrite, RepositoryFileAcl acl )
     throws DomainIdNullException, DomainAlreadyExistsException, DomainStorageException {
     logger.debug( "storeDomain(inputStream, " + domainId + ", " + overwrite + ")" );
     if ( null == inputStream ) {
@@ -260,7 +265,19 @@ public class PentahoMetadataDomainRepository implements IMetadataDomainRepositor
     // This invalidates any caching
     flushDomains();
 
+    if ( acl != null ) {
+      getAclHelper().setAclFor( domainId, IAclShadowNodeHelper.DatasourceType.METADATA, acl );
+    }
   }
+
+  private synchronized IAclShadowNodeHelper getAclHelper() {
+    if ( aclHelper == null ) {
+      // TODO: replace with PentahoSystem.get() when it will be included to Spring configuration or add to constructor
+      aclHelper = new JcrAclShadowNodeHelper( PentahoSystem.get( IUnifiedRepository.class ), "/public" );
+    }
+    return aclHelper;
+  }
+
 
   /*
    * retrieves the data streams for the metadata referenced by domainId. This could be a single .xmi file or an .xmi
