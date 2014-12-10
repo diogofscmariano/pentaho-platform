@@ -52,6 +52,7 @@ import org.pentaho.platform.api.data.DBDatasourceServiceException;
 import org.pentaho.platform.api.data.IDBDatasourceService;
 import org.pentaho.platform.api.engine.ICacheManager;
 import org.pentaho.platform.api.engine.IPentahoSession;
+import org.pentaho.platform.api.engine.ISystemConfig;
 import org.pentaho.platform.api.engine.ObjectFactoryException;
 import org.pentaho.platform.api.repository2.unified.IUnifiedRepository;
 import org.pentaho.platform.api.repository2.unified.RepositoryFile;
@@ -641,9 +642,9 @@ public class MondrianCatalogHelper implements IMondrianCatalogService {
 
   private synchronized IAclShadowNodeHelper getAclHelper() {
     if (aclHelper == null) {
-      // TODO: replace with PentahoSystem.get() when it will be included to Spring configuration or add to constructor
-      aclHelper = new JcrAclShadowNodeHelper( PentahoSystem.get( IUnifiedRepository.class ),
-        "/public" );
+      String aclFolder = PentahoSystem.get( ISystemConfig.class ).getProperty( "repository.aclNodeFolder" );
+      aclFolder = StringUtils.defaultIfEmpty( aclFolder, "/public" );
+      aclHelper = new JcrAclShadowNodeHelper( PentahoSystem.get( IUnifiedRepository.class ), aclFolder );
     }
     return aclHelper;
   }

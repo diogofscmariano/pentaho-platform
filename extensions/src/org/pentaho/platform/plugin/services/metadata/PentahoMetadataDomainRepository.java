@@ -30,6 +30,7 @@ import org.pentaho.metadata.repository.DomainStorageException;
 import org.pentaho.metadata.repository.IMetadataDomainRepository;
 import org.pentaho.metadata.util.LocalizationUtil;
 import org.pentaho.metadata.util.XmiParser;
+import org.pentaho.platform.api.engine.ISystemConfig;
 import org.pentaho.platform.api.repository2.unified.IUnifiedRepository;
 import org.pentaho.platform.api.repository2.unified.RepositoryFile;
 import org.pentaho.platform.api.repository2.unified.RepositoryFileAcl;
@@ -272,8 +273,9 @@ public class PentahoMetadataDomainRepository implements IMetadataDomainRepositor
 
   private synchronized IAclShadowNodeHelper getAclHelper() {
     if ( aclHelper == null ) {
-      // TODO: replace with PentahoSystem.get() when it will be included to Spring configuration or add to constructor
-      aclHelper = new JcrAclShadowNodeHelper( PentahoSystem.get( IUnifiedRepository.class ), "/public" );
+      String aclFolder = PentahoSystem.get( ISystemConfig.class ).getProperty( "repository.aclNodeFolder" );
+      aclFolder = StringUtils.defaultIfEmpty( aclFolder, "/public" );
+      aclHelper = new JcrAclShadowNodeHelper( PentahoSystem.get( IUnifiedRepository.class ), aclFolder );
     }
     return aclHelper;
   }
