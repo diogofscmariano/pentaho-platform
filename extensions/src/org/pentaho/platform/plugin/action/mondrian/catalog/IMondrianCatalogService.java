@@ -18,6 +18,7 @@
 package org.pentaho.platform.plugin.action.mondrian.catalog;
 
 import org.pentaho.platform.api.engine.IPentahoSession;
+import org.pentaho.platform.api.repository2.unified.RepositoryFileAcl;
 
 import java.io.InputStream;
 import java.util.List;
@@ -99,6 +100,6 @@ public interface IMondrianCatalogService {
    * @param session
    */
   void addCatalog( InputStream inputStream, MondrianCatalog catalog, boolean overwriteInRepossitory,
-      IPentahoSession session );
+                   RepositoryFileAcl acl, IPentahoSession session );
 
 }

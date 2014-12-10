@@ -55,6 +55,7 @@ import org.pentaho.platform.api.engine.IPentahoSession;
 import org.pentaho.platform.api.engine.ObjectFactoryException;
 import org.pentaho.platform.api.repository2.unified.IUnifiedRepository;
 import org.pentaho.platform.api.repository2.unified.RepositoryFile;
+import org.pentaho.platform.api.repository2.unified.RepositoryFileAcl;
 import org.pentaho.platform.api.repository2.unified.data.node.DataNode;
 import org.pentaho.platform.api.repository2.unified.data.node.NodeRepositoryFileData;
 import org.pentaho.platform.api.util.XmlParseException;
@@ -67,6 +68,8 @@ import org.pentaho.platform.plugin.action.mondrian.catalog.MondrianCatalogServic
 import org.pentaho.platform.repository.solution.filebased.MondrianVfs;
 import org.pentaho.platform.repository.solution.filebased.SolutionRepositoryVfsFileObject;
 import org.pentaho.platform.repository2.ClientRepositoryPaths;
+import org.pentaho.platform.repository2.unified.jcr.IAclShadowNodeHelper;
+import org.pentaho.platform.repository2.unified.jcr.JcrAclShadowNodeHelper;
 import org.pentaho.platform.util.logging.Logger;
 import org.pentaho.platform.util.messages.LocaleHelper;
 import org.pentaho.platform.util.xml.dom4j.XmlDom4JHelper;
@@ -128,6 +131,8 @@ public class MondrianCatalogHelper implements IMondrianCatalogService {
    * See MONDRIAN-2229.
    */
   private final boolean useLegacyDbName;
+
+  private IAclShadowNodeHelper aclHelper;
 
   public static final String MONDRIAN_DATASOURCE_FOLDER = "mondrian"; //$NON-NLS-1$
 
@@ -546,7 +551,7 @@ public class MondrianCatalogHelper implements IMondrianCatalogService {
       final IPentahoSession pentahoSession ) throws MondrianCatalogServiceException {
     String mondrianSchema = (String) pentahoSession.getAttribute( "MONDRIAN_SCHEMA_XML_CONTENT" ); //$NON-NLS-1$
     InputStream schemaInputStream = IOUtils.toInputStream( mondrianSchema );
-    addCatalog( schemaInputStream, catalog, overwrite, pentahoSession );
+    addCatalog( schemaInputStream, catalog, overwrite, null, pentahoSession );
   }
 
   /**
@@ -558,8 +563,8 @@ public class MondrianCatalogHelper implements IMondrianCatalogService {
    * @param pentahoSession
    * @throws MondrianCatalogServiceException
    */
-  public synchronized void addCatalog( InputStream schemaInputStream, final MondrianCatalog catalog,
-      final boolean overwrite, final IPentahoSession pentahoSession )
+  public synchronized void addCatalog( InputStream schemaInputStream, MondrianCatalog catalog,
+      boolean overwrite, RepositoryFileAcl acl, IPentahoSession pentahoSession )
     throws MondrianCatalogServiceException {
     if ( MondrianCatalogHelper.logger.isDebugEnabled() ) {
       MondrianCatalogHelper.logger.debug( "addCatalog" ); //$NON-NLS-1$
@@ -628,6 +633,19 @@ public class MondrianCatalogHelper implements IMondrianCatalogService {
           .debug( "refreshing from dataSourcesConfig (" + dataSourcesConfig + ")" ); //$NON-NLS-1$ //$NON-NLS-2$
     }
     reInit( pentahoSession );
+
+    if (acl != null) {
+      getAclHelper().setAclFor( catalog.getName(), IAclShadowNodeHelper.DatasourceType.MONDRIAN, acl );
+    }
+  }
+
+  private synchronized IAclShadowNodeHelper getAclHelper() {
+    if (aclHelper == null) {
+      // TODO: replace with PentahoSystem.get() when it will be included to Spring configuration or add to constructor
+      aclHelper = new JcrAclShadowNodeHelper( PentahoSystem.get( IUnifiedRepository.class ),
+        "/public" );
+    }
+    return aclHelper;
   }
 
   public void importSchema( File mondrianFile, String databaseConnection, String parameters ) {
