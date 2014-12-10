@@ -66,6 +66,10 @@ public class JcrAclShadowNodeHelper implements IAclShadowNodeHelper {
     setAclFor( dataSourceName, type, null );
   }
 
+  @Override public void removeAclNodeFor( String dataSourceName, DatasourceType type ) {
+    setAclFor( dataSourceName, type, null );
+  }
+
   @Override public String getShadowFolder() {
     return shadowFolder;
   }
@@ -98,7 +102,7 @@ abstract class AbstractCommand<T> implements Callable<T> {
 
     return repository.createFile(
       folder.getId(),
-      new RepositoryFile.Builder( resolvedDsName ).shadow( true ).build(),
+      new RepositoryFile.Builder( resolvedDsName ).aclNode( true ).build(),
       new SampleRepositoryFileData( "", false, 0 ), ""
     );
   }

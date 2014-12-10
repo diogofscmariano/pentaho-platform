@@ -11,17 +11,19 @@ public interface IAclShadowNodeHelper {
 
   /**
    * Returns <tt>true</tt> if the current user has access to <tt>dataSourceName</tt>.
-   * @param dataSourceName  data source
-   * @param type            data source's type
-   * @return                <tt>true</tt> if the user can access the data source
+   *
+   * @param dataSourceName data source
+   * @param type           data source's type
+   * @return <tt>true</tt> if the user can access the data source
    */
   boolean hasAccess( String dataSourceName, DatasourceType type );
 
   /**
    * Returns an ACL rules for <tt>dataSourceName</tt>. If none exists, <tt>null</tt> is returned.
-   * @param dataSourceName  data source
-   * @param type            data source's type
-   * @return                ACL rules if exist or <tt>null</tt> otherwise
+   *
+   * @param dataSourceName data source
+   * @param type           data source's type
+   * @return ACL rules if exist or <tt>null</tt> otherwise
    */
   RepositoryFileAcl getAclFor( String dataSourceName, DatasourceType type );
 
@@ -42,6 +44,15 @@ public interface IAclShadowNodeHelper {
    * @param type           data source's type
    */
   void publishDatasource( String dataSourceName, DatasourceType type );
+
+  /**
+   * Removes, if it exists, a shadow node related to the <tt>dataSourceName</tt>. Internally it simply calls
+   * <code>setAcl(null)</code>.
+   *
+   * @param dataSourceName data source
+   * @param type           data source's type
+   */
+  void removeAclNodeFor( String dataSourceName, DatasourceType type );
 
   /**
    * Returns a path where shadow nodes are created.
