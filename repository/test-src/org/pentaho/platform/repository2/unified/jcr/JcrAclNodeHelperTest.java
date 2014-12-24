@@ -16,6 +16,8 @@ import org.pentaho.platform.repository2.unified.ServerRepositoryPaths;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import javax.jcr.PathNotFoundException;
+import javax.jcr.ReferentialIntegrityException;
 import java.util.EnumSet;
 
 import static org.junit.Assert.*;
@@ -24,8 +26,6 @@ import static org.junit.Assert.*;
 @ContextConfiguration( locations = { "classpath:/repository.spring.xml",
     "classpath:/repository-test-override.spring.xml" } )
 public class JcrAclNodeHelperTest extends DefaultUnifiedRepositoryBase {
-
-  private static final String DS_NAME = "test.txt";
 
   private JcrAclNodeHelper helper;
   private ITenant defaultTenant;
@@ -144,7 +144,7 @@ public class JcrAclNodeHelperTest extends DefaultUnifiedRepositoryBase {
     makeDsPrivate();
 
     loginAsRepositoryAdmin();
-    assertTrue( "No ACL node was created", repo.getReferrers( targetFile.getId() ).size() > 0 );
+    assertTrue( "No ACL node was created", !repo.getReferrers( targetFile.getId() ).isEmpty() );
   }
 
   @Test
@@ -153,7 +153,7 @@ public class JcrAclNodeHelperTest extends DefaultUnifiedRepositoryBase {
 
     loginAsRepositoryAdmin();
     helper.setAclFor( targetFile, null );
-    assertTrue( "Referrers should be null after ACL delete", repo.getReferrers( targetFile.getId() ).size() == 0 );
+    assertTrue( "Referrers should be null after ACL delete", repo.getReferrers( targetFile.getId() ).isEmpty() );
   }
 
   @Test
@@ -170,7 +170,7 @@ public class JcrAclNodeHelperTest extends DefaultUnifiedRepositoryBase {
 
   }
 
-  @Test
+  @Test(expected = PathNotFoundException.class)
   public void canDeleteTargetIfAclNodeRemoved() {
     makeDsPrivate();
 
@@ -178,13 +178,7 @@ public class JcrAclNodeHelperTest extends DefaultUnifiedRepositoryBase {
     helper.setAclFor( targetFile, null );
     repo.deleteFile( targetFile.getId(), true, "I can be killed" );
 
-    try{
-      repo.getFile( targetFile.getPath() );
-      fail("Should have thrown PathNotFoundException");
-    } catch ( Exception e ){
-
-    }
-
+    repo.getFile( targetFile.getPath() );
   }
 
 
