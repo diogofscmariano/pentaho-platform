@@ -134,8 +134,6 @@ public class JcrAclNodeHelper implements IAclNodeHelper {
             RepositoryFileAcl existing = unifiedRepository.getAcl( aclNode.getId() );
             RepositoryFileAcl updated =
                 new RepositoryFileAcl.Builder( existing )
-                    .clearAces()
-                    .entriesInheriting( false )
                     .aces( acl.getAces() )
                     .build();
             unifiedRepository.updateAcl( updated );
