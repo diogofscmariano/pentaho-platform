@@ -61,7 +61,7 @@ public class JcrAclNodeHelper implements IAclNodeHelper {
         }
       } );
     } catch ( Exception e ) {
-      logger.error( "Error retriving ACL Node", e );
+      logger.error( "Error retrieving ACL Node", e );
       return null;
     }
 
