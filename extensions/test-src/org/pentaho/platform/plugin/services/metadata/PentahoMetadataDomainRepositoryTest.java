@@ -30,10 +30,12 @@ import org.pentaho.metadata.util.XmiParser;
 import org.pentaho.platform.api.engine.IPentahoSession;
 import org.pentaho.platform.api.repository2.unified.IUnifiedRepository;
 import org.pentaho.platform.api.repository2.unified.RepositoryFile;
+import org.pentaho.platform.api.repository2.unified.RepositoryFilePermission;
 import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
 import org.pentaho.platform.repository2.unified.RepositoryUtils;
 import org.pentaho.platform.repository2.unified.fs.FileSystemBackedUnifiedRepository;
-import org.pentaho.platform.repository2.unified.jcr.IAclNodeHelper;
+import org.pentaho.platform.api.repository2.unified.IAclNodeHelper;
+import org.pentaho.platform.repository2.unified.jcr.IDatasourceAclHelper;
 import org.pentaho.test.platform.repository2.unified.MockUnifiedRepository;
 
 import java.io.ByteArrayInputStream;
@@ -41,6 +43,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -89,9 +92,7 @@ public class PentahoMetadataDomainRepositoryTest extends TestCase {
 
 
 
-    IAclNodeHelper helper = Mockito.mock( IAclNodeHelper.class );
-    doReturn( true ).when( helper ).hasAccess( "dsaasdads", IAclNodeHelper.DatasourceType.METADATA );
-    domainRepository.setAclHelper( helper );
+    domainRepository.setAclHelper( mockAclNodeHelper() );
 /*
     PentahoMetadataDomainRepository mockit = Mockito.mock( PentahoMetadataDomainRepository.class );
     doReturn( helper ).when( mockit ).getAclHelper();
@@ -100,6 +101,15 @@ public class PentahoMetadataDomainRepositoryTest extends TestCase {
       domainRepository.removeDomain( domainRepository.getDomainIds().iterator().next() );
     }
 
+  }
+
+
+  private IDatasourceAclHelper mockAclNodeHelper() {
+    IDatasourceAclHelper helper = mock( IDatasourceAclHelper.class );
+    when( helper.canAccess( anyString(), any( EnumSet.class ) )).thenReturn( true );
+    when( helper.canRead( anyString() )).thenReturn( true );
+    when( helper.canWrite( anyString() )).thenReturn( true );
+    return helper;
   }
 
   public void tearDown() throws Exception {
@@ -205,9 +215,7 @@ public class PentahoMetadataDomainRepositoryTest extends TestCase {
     domainRepository.removeDomain( STEEL_WHEELS );
     domainRepository.removeDomain( SAMPLE_DOMAIN_ID );
 
-    IAclNodeHelper helper = Mockito.mock( IAclNodeHelper.class );
-    doReturn( true ).when( helper ).hasAccess( SAMPLE_DOMAIN_ID, IAclNodeHelper.DatasourceType.METADATA );
-    domainRepository.setAclHelper( helper );
+    domainRepository.setAclHelper( mockAclNodeHelper() );
 
     final MockDomain originalDomain = new MockDomain( SAMPLE_DOMAIN_ID );
     domainRepository.storeDomain( originalDomain, false );
@@ -340,9 +348,7 @@ public class PentahoMetadataDomainRepositoryTest extends TestCase {
     domainRepository.removeDomain( STEEL_WHEELS );
     domainRepository.removeDomain( SAMPLE_DOMAIN_ID );
 
-    IAclNodeHelper helper = Mockito.mock( IAclNodeHelper.class );
-    doReturn( true ).when( helper ).hasAccess( SAMPLE_DOMAIN_ID, IAclNodeHelper.DatasourceType.METADATA );
-    domainRepository.setAclHelper( helper );
+    domainRepository.setAclHelper( mockAclNodeHelper() );
 
     domainRepository.storeDomain( new MockDomain( SAMPLE_DOMAIN_ID ), true );
     final Set<String> domainIds1 = domainRepository.getDomainIds();

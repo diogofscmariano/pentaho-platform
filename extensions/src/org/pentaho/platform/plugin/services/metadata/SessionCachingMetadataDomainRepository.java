@@ -30,12 +30,9 @@ import org.pentaho.metadata.util.SecurityHelper;
 import org.pentaho.platform.api.engine.ICacheManager;
 import org.pentaho.platform.api.engine.ILogoutListener;
 import org.pentaho.platform.api.engine.IPentahoSession;
-import org.pentaho.platform.api.engine.ISystemConfig;
-import org.pentaho.platform.api.repository2.unified.IUnifiedRepository;
 import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
-import org.pentaho.platform.repository2.unified.jcr.IAclNodeHelper;
-import org.pentaho.platform.repository2.unified.jcr.JcrAclNodeHelper;
+import org.pentaho.platform.repository2.unified.jcr.IDatasourceAclHelper;
 
 import java.io.InputStream;
 import java.io.Serializable;
@@ -61,9 +58,9 @@ public class SessionCachingMetadataDomainRepository implements IMetadataDomainRe
 
   private ICacheManager cacheManager;
 
-  private IAclNodeHelper aclHelper;
+  private final IDatasourceAclHelper aclHelper;
 
-  private IMetadataDomainRepository delegate;
+  private final IMetadataDomainRepository delegate;
   private static final String DOMAIN_CACHE_KEY_PREDICATE = "domain-id-cache-for-session:";
 
   /**
@@ -124,6 +121,13 @@ public class SessionCachingMetadataDomainRepository implements IMetadataDomainRe
       throw new NullPointerException();
     }
     this.delegate = delegate;
+
+    if (delegate instanceof IDomainFileResolver) {
+      aclHelper = new JcrMetadataAclHelper( (IDomainFileResolver) delegate );
+    } else {
+      aclHelper = null;
+    }
+
     cacheManager = PentahoSystem.getCacheManager( null ); // cache manager gets loaded just once...
     if ( cacheManager != null ) {
       if ( !cacheManager.cacheEnabled( CACHE_REGION ) ) {
@@ -229,7 +233,7 @@ public class SessionCachingMetadataDomainRepository implements IMetadataDomainRe
       if ( logger.isDebugEnabled() ) {
         logger.debug( "Found domain in cache: " + key ); //$NON-NLS-1$
       }
-      if ( !getAclHelper().hasAccess( id, IAclNodeHelper.DatasourceType.METADATA ) ) {
+      if ( aclHelper != null && !aclHelper.canRead( id ) ) {
         purgeDomain( domain.getId() );
         domain = null;
       }
@@ -392,7 +396,7 @@ public class SessionCachingMetadataDomainRepository implements IMetadataDomainRe
       boolean dirtyCache = false;
 
       for ( String domain : domainIds ) {
-        if ( !getAclHelper().hasAccess( domain, IAclNodeHelper.DatasourceType.METADATA ) ) {
+        if ( aclHelper != null && !aclHelper.canRead( domain ) ) {
           domainIds.remove( domain );
           removeDomainFromIDCache( domain );
           dirtyCache = true;
@@ -410,22 +414,6 @@ public class SessionCachingMetadataDomainRepository implements IMetadataDomainRe
     domainIds = delegate.getDomainIds();
     cacheManager.putInRegionCache( CACHE_REGION, domainKey, new HashSet<String>( domainIds ) );
     return domainIds;
-  }
-
-  protected synchronized IAclNodeHelper getAclHelper() {
-    if ( aclHelper == null ) {
-      ISystemConfig systemConfig = PentahoSystem.get( ISystemConfig.class );
-      String alcFolder = null;
-      if ( systemConfig != null && systemConfig.getConfiguration( "repository" ) != null ) {
-        alcFolder = systemConfig.getProperty( "repository.aclNodeFolder" );
-      }
-      aclHelper = new JcrAclNodeHelper( PentahoSystem.get( IUnifiedRepository.class ), alcFolder );
-    }
-    return aclHelper;
-  }
-
-  public void setAclHelper( IAclNodeHelper helper ) {
-    this.aclHelper = helper;
   }
 
   @Override

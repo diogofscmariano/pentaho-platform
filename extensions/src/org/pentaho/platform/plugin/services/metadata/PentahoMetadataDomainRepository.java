@@ -30,17 +30,18 @@ import org.pentaho.metadata.repository.DomainStorageException;
 import org.pentaho.metadata.repository.IMetadataDomainRepository;
 import org.pentaho.metadata.util.LocalizationUtil;
 import org.pentaho.metadata.util.XmiParser;
-import org.pentaho.platform.api.engine.ISystemConfig;
 import org.pentaho.platform.api.repository2.unified.IUnifiedRepository;
 import org.pentaho.platform.api.repository2.unified.RepositoryFile;
 import org.pentaho.platform.api.repository2.unified.RepositoryFileAcl;
+import org.pentaho.platform.api.repository2.unified.RepositoryFilePermission;
 import org.pentaho.platform.api.repository2.unified.UnifiedRepositoryException;
 import org.pentaho.platform.api.repository2.unified.data.simple.SimpleRepositoryFileData;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.plugin.services.messages.Messages;
 import org.pentaho.platform.repository2.unified.RepositoryUtils;
 import org.pentaho.platform.repository2.unified.fileio.RepositoryFileInputStream;
-import org.pentaho.platform.repository2.unified.jcr.IAclNodeHelper;
+import org.pentaho.platform.api.repository2.unified.IAclNodeHelper;
+import org.pentaho.platform.repository2.unified.jcr.IDatasourceAclHelper;
 import org.pentaho.platform.repository2.unified.jcr.JcrAclNodeHelper;
 
 import java.io.BufferedReader;
@@ -64,7 +65,7 @@ import java.util.*;
  * @author <a href="mailto:dkincade@pentaho.com">David M. Kincade</a>
  */
 public class PentahoMetadataDomainRepository implements IMetadataDomainRepository,
-    IAclAwarePentahoMetadataDomainRepositoryImporter, IPentahoMetadataDomainRepositoryExporter {
+    IAclAwarePentahoMetadataDomainRepositoryImporter, IPentahoMetadataDomainRepositoryExporter, IDomainFileResolver {
   // The logger for this class
   private static final Log logger = LogFactory.getLog( PentahoMetadataDomainRepository.class );
 
@@ -110,7 +111,7 @@ public class PentahoMetadataDomainRepository implements IMetadataDomainRepositor
   // The localization utility class (used to load side-car properties files into a Domain object)
   private LocalizationUtil localizationUtil;
 
-  private IAclNodeHelper aclHelper;
+  private IDatasourceAclHelper aclHelper;
 
   /**
    * Creates an instance of this class providing the {@link IUnifiedRepository} repository backend.
@@ -268,23 +269,18 @@ public class PentahoMetadataDomainRepository implements IMetadataDomainRepositor
     flushDomains();
 
     if ( acl != null ) {
-      getAclHelper().setAclFor( domainId, IAclNodeHelper.DatasourceType.METADATA, acl );
+      getAclHelper().setAclFor( domainId, acl );
     }
   }
 
-  protected synchronized IAclNodeHelper getAclHelper() {
+  protected synchronized IDatasourceAclHelper getAclHelper() {
     if ( aclHelper == null ) {
-      ISystemConfig systemConfig = PentahoSystem.get( ISystemConfig.class );
-      String alcFolder = null;
-      if ( systemConfig != null && systemConfig.getConfiguration( "repository" ) != null ) {
-        alcFolder = systemConfig.getProperty( "repository.aclNodeFolder" );
-      }
-      aclHelper = new JcrAclNodeHelper( PentahoSystem.get( IUnifiedRepository.class ), alcFolder );
+      aclHelper = new JcrMetadataAclHelper( this );
     }
     return aclHelper;
   }
 
-  protected void setAclHelper( IAclNodeHelper helper ) {
+  protected void setAclHelper( IDatasourceAclHelper helper ) {
     this.aclHelper = helper;
   }
 
@@ -328,7 +324,7 @@ public class PentahoMetadataDomainRepository implements IMetadataDomainRepositor
         "PentahoMetadataDomainRepository.ERROR_0004_DOMAIN_ID_INVALID", domainId ) );
     }
     Domain domain = null;
-    if ( getAclHelper().hasAccess( domainId, IAclNodeHelper.DatasourceType.METADATA ) ) {
+    if ( getAclHelper().canRead( domainId ) ) {
       try {
         // Load the domain file
         final RepositoryFile file = getMetadataRepositoryFile( domainId );
@@ -370,7 +366,7 @@ public class PentahoMetadataDomainRepository implements IMetadataDomainRepositor
     synchronized ( metadataMapping ) {
       Collection<String> domains = metadataMapping.getDomainIds();
       for ( String domain : domains ) {
-        if ( getAclHelper().hasAccess( domain, IAclNodeHelper.DatasourceType.METADATA ) ) {
+        if ( getAclHelper().canRead( domain ) ) {
           domainIds.add( domain );
         }
       }
@@ -398,6 +394,9 @@ public class PentahoMetadataDomainRepository implements IMetadataDomainRepositor
       metadataMapping.deleteDomain( domainId );
     }
 
+    // it no node exists, nothing would happen
+    getAclHelper().removeAclFor( domainId );
+
     for ( final RepositoryFile file : domainFiles ) {
       if ( logger.isTraceEnabled() ) {
         logger.trace( "Deleting repository file " + toString( file ) );
@@ -409,9 +408,6 @@ public class PentahoMetadataDomainRepository implements IMetadataDomainRepositor
     if ( !domainFiles.isEmpty() ) {
       flushDomains();
     }
-
-    // it no node exists, nothing would happen
-    getAclHelper().removeAclNodeFor( domainId, IAclNodeHelper.DatasourceType.METADATA );
   }
 
   /**
@@ -711,6 +707,10 @@ public class PentahoMetadataDomainRepository implements IMetadataDomainRepositor
       domainFile = metadataMapping.getDomainFile( domainId );
     }
     return domainFile;
+  }
+
+  @Override public RepositoryFile resolveDomainFileFor( String domainId ) {
+    return getMetadataRepositoryFile( domainId );
   }
 
   /**

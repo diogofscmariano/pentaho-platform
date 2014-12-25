@@ -52,11 +52,11 @@ import org.pentaho.platform.api.data.DBDatasourceServiceException;
 import org.pentaho.platform.api.data.IDBDatasourceService;
 import org.pentaho.platform.api.engine.ICacheManager;
 import org.pentaho.platform.api.engine.IPentahoSession;
-import org.pentaho.platform.api.engine.ISystemConfig;
 import org.pentaho.platform.api.engine.ObjectFactoryException;
 import org.pentaho.platform.api.repository2.unified.IUnifiedRepository;
 import org.pentaho.platform.api.repository2.unified.RepositoryFile;
 import org.pentaho.platform.api.repository2.unified.RepositoryFileAcl;
+import org.pentaho.platform.api.repository2.unified.RepositoryFilePermission;
 import org.pentaho.platform.api.repository2.unified.data.node.DataNode;
 import org.pentaho.platform.api.repository2.unified.data.node.NodeRepositoryFileData;
 import org.pentaho.platform.api.util.XmlParseException;
@@ -70,8 +70,7 @@ import org.pentaho.platform.plugin.services.importexport.legacy.MondrianCatalogR
 import org.pentaho.platform.repository.solution.filebased.MondrianVfs;
 import org.pentaho.platform.repository.solution.filebased.SolutionRepositoryVfsFileObject;
 import org.pentaho.platform.repository2.ClientRepositoryPaths;
-import org.pentaho.platform.repository2.unified.jcr.IAclNodeHelper;
-import org.pentaho.platform.repository2.unified.jcr.JcrAclNodeHelper;
+import org.pentaho.platform.repository2.unified.jcr.IDatasourceAclHelper;
 import org.pentaho.platform.util.logging.Logger;
 import org.pentaho.platform.util.messages.LocaleHelper;
 import org.pentaho.platform.util.xml.dom4j.XmlDom4JHelper;
@@ -95,6 +94,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -134,7 +134,7 @@ public class MondrianCatalogHelper implements IAclAwareMondrianCatalogService {
    */
   private final boolean useLegacyDbName;
 
-  private IAclNodeHelper aclHelper;
+  private IDatasourceAclHelper aclHelper;
 
   public static final String MONDRIAN_DATASOURCE_FOLDER = "mondrian"; //$NON-NLS-1$
 
@@ -583,15 +583,6 @@ public class MondrianCatalogHelper implements IAclAwareMondrianCatalogService {
 
     init( pentahoSession );
 
-    // do an access check first
-    if ( !hasAccess( catalog, CatalogPermission.WRITE, pentahoSession ) ) {
-      if ( MondrianCatalogHelper.logger.isDebugEnabled() ) {
-        MondrianCatalogHelper.logger.debug( "user does not have access; throwing exception" ); //$NON-NLS-1$
-      }
-      throw new MondrianCatalogServiceException( Messages.getInstance().getErrorString(
-          "MondrianCatalogHelper.ERROR_0003_INSUFFICIENT_PERMISSION" ), Reason.ACCESS_DENIED ); //$NON-NLS-1$
-    }
-
     // check for existing dataSourceInfo+catalog
     if ( catalogExists( catalog, pentahoSession ) && !overwrite ) {
       throw new MondrianCatalogServiceException( Messages.getInstance().getErrorString(
@@ -644,7 +635,7 @@ public class MondrianCatalogHelper implements IAclAwareMondrianCatalogService {
     reInit( pentahoSession );
 
     if ( acl != null ) {
-      getAclHelper().setAclFor( catalog.getName(), IAclNodeHelper.DatasourceType.MONDRIAN, acl );
+      getAclHelper().setAclFor( catalog.getName(), acl );
     }
   }
 
@@ -656,14 +647,9 @@ public class MondrianCatalogHelper implements IAclAwareMondrianCatalogService {
     return new MondrianCatalogRepositoryHelper( PentahoSystem.get( IUnifiedRepository.class ) );
   }
 
-  protected synchronized IAclNodeHelper getAclHelper() {
+  protected synchronized IDatasourceAclHelper getAclHelper() {
     if ( aclHelper == null ) {
-      ISystemConfig systemConfig = PentahoSystem.get( ISystemConfig.class );
-      String alcFolder = null;
-      if ( systemConfig != null && systemConfig.getConfiguration( "repository" ) != null ) {
-        alcFolder = systemConfig.getProperty( "repository.aclNodeFolder" );
-      }
-      aclHelper = new JcrAclNodeHelper( PentahoSystem.get( IUnifiedRepository.class ), alcFolder );
+      aclHelper = new JcrMondrianAclHelper(  );
     }
     return aclHelper;
   }
@@ -762,7 +748,7 @@ public class MondrianCatalogHelper implements IAclAwareMondrianCatalogService {
 
     MondrianCatalog cat = getCatalogFromCache( context, pentahoSession );
     if ( null != cat ) {
-      if ( hasAccess( cat, CatalogPermission.READ, pentahoSession ) ) {
+      if ( hasAccess( cat, RepositoryFilePermission.READ ) ) {
         return cat;
       } else {
         if ( MondrianCatalogHelper.logger.isDebugEnabled() ) {
@@ -1020,7 +1006,7 @@ public class MondrianCatalogHelper implements IAclAwareMondrianCatalogService {
       final boolean jndiOnly ) {
     List<MondrianCatalog> filtered = new ArrayList<MondrianCatalog>();
     for ( MondrianCatalog orig : origList ) {
-      if ( hasAccess( orig, CatalogPermission.READ, pentahoSession ) && ( !jndiOnly || orig.isJndi() ) ) {
+      if ( hasAccess( orig, RepositoryFilePermission.READ ) && ( !jndiOnly || orig.isJndi() ) ) {
         filtered.add( orig );
       }
     }
@@ -1034,9 +1020,8 @@ public class MondrianCatalogHelper implements IAclAwareMondrianCatalogService {
    * <p/>
    * Why is this class even enforcing security anyway!?
    */
-  protected boolean hasAccess( final MondrianCatalog cat, final CatalogPermission perm,
-      final IPentahoSession pentahoSession ) {
-    return getAclHelper().hasAccess( cat.getName(), IAclNodeHelper.DatasourceType.MONDRIAN );
+  protected boolean hasAccess( MondrianCatalog cat, RepositoryFilePermission permission ) {
+    return getAclHelper().canAccess( cat.getName(), EnumSet.of( permission ) );
   }
 
   protected String getSolutionRepositoryRelativePath( final String path, final IPentahoSession pentahoSession ) {
@@ -1147,7 +1132,7 @@ public class MondrianCatalogHelper implements IAclAwareMondrianCatalogService {
     // do an access check first
     //
 
-    if ( !hasAccess( catalog, CatalogPermission.WRITE, pentahoSession ) ) {
+    if ( !hasAccess( catalog, RepositoryFilePermission.WRITE ) ) {
       if ( MondrianCatalogHelper.logger.isDebugEnabled() ) {
         MondrianCatalogHelper.logger.debug( "user does not have access; throwing exception" ); //$NON-NLS-1$
       }
@@ -1155,12 +1140,13 @@ public class MondrianCatalogHelper implements IAclAwareMondrianCatalogService {
           "MondrianCatalogHelper.ERROR_0003_INSUFFICIENT_PERMISSION" ), Reason.ACCESS_DENIED ); //$NON-NLS-1$
     }
 
+    getAclHelper().removeAclFor( catalog.getName() );
+
     IUnifiedRepository solutionRepository = getRepository();
     RepositoryFile deletingFile = solutionRepository.getFile( RepositoryFile.SEPARATOR + "etc" //$NON-NLS-1$
         + RepositoryFile.SEPARATOR + "mondrian" + RepositoryFile.SEPARATOR + catalog.getName() ); //$NON-NLS-1$
     solutionRepository.deleteFile( deletingFile.getId(), true, "" ); //$NON-NLS-1$
     reInit( pentahoSession );
 
-    getAclHelper().removeAclNodeFor( catalog.getName(), IAclNodeHelper.DatasourceType.MONDRIAN );
   }
 }

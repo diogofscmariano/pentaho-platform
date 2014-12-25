@@ -29,16 +29,15 @@ import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.engine.core.system.StandaloneSession;
 import org.pentaho.platform.engine.core.system.objfac.AggregateObjectFactory;
 import org.pentaho.platform.plugin.services.metadata.SessionCachingMetadataDomainRepository;
-import org.pentaho.platform.repository2.unified.jcr.IAclNodeHelper;
+import org.pentaho.platform.repository2.unified.jcr.IDatasourceAclHelper;
 import org.pentaho.test.platform.engine.core.BaseTest;
 import org.pentaho.test.platform.engine.core.SimpleObjectFactory;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.util.Set;
 
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 import static org.pentaho.test.platform.plugin.services.metadata.MockSessionAwareMetadataDomainRepository.TEST_LOCALE;
 
 public class SessionCachingMetadataDomainRepositoryTest extends BaseTest {
@@ -118,10 +117,6 @@ public class SessionCachingMetadataDomainRepositoryTest extends BaseTest {
     SessionCachingMetadataDomainRepository repo = new SessionCachingMetadataDomainRepository( mock );
     PentahoSessionHolder.setSession( new StandaloneSession( "Standalone Session", SESSION_ID ) ); //$NON-NLS-1$
 
-    IAclNodeHelper helper = Mockito.mock( IAclNodeHelper.class );
-    doReturn( true ).when( helper ).hasAccess( ID, IAclNodeHelper.DatasourceType.METADATA );
-    repo.setAclHelper( helper );
-
     assertEquals( 0, mock.getInvocationCount( "getDomain" ) ); //$NON-NLS-1$
     Domain d = repo.getDomain( ID );
     assertEquals( ID, d.getId() );
@@ -144,8 +139,11 @@ public class SessionCachingMetadataDomainRepositoryTest extends BaseTest {
     assertEquals( 2, PentahoSystem.getCacheManager( null ).getAllKeysFromRegionCache( CACHE_NAME ).size() );
 
     // Block access to domain ID2. Cache should be cleared for this domain
-    doReturn( false ).when( helper ).hasAccess( ID2, IAclNodeHelper.DatasourceType.METADATA );
-    repo.setAclHelper( helper );
+    IDatasourceAclHelper mockAclHelper = Mockito.mock( IDatasourceAclHelper.class );
+    when( mockAclHelper.canRead( ID2 ) ).thenReturn( false );
+    Field field = repo.getClass().getDeclaredField( "aclHelper" );
+    field.setAccessible( true );
+    field.set( repo, mockAclHelper );
 
     repo.getDomain( ID2 );
 
@@ -220,10 +218,6 @@ public class SessionCachingMetadataDomainRepositoryTest extends BaseTest {
 
     SessionCachingMetadataDomainRepository repo = new SessionCachingMetadataDomainRepository( mock );
     PentahoSessionHolder.setSession( new StandaloneSession( "Standalone Session", "1234-5678-90" ) ); //$NON-NLS-1$ //$NON-NLS-2$
-
-    IAclNodeHelper helper = Mockito.mock( IAclNodeHelper.class );
-    doReturn( true ).when( helper ).hasAccess( ID, IAclNodeHelper.DatasourceType.METADATA );
-    repo.setAclHelper( helper );
 
     Set<String> ids = repo.getDomainIds();
     assertEquals( 0, ids.size() );
