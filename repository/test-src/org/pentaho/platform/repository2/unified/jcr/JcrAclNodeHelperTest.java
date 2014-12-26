@@ -170,7 +170,7 @@ public class JcrAclNodeHelperTest extends DefaultUnifiedRepositoryBase {
 
   }
 
-  @Test(expected = PathNotFoundException.class)
+  @Test
   public void canDeleteTargetIfAclNodeRemoved() {
     makeDsPrivate();
 
@@ -178,7 +178,20 @@ public class JcrAclNodeHelperTest extends DefaultUnifiedRepositoryBase {
     helper.setAclFor( targetFile, null );
     repo.deleteFile( targetFile.getId(), true, "I can be killed" );
 
-    repo.getFile( targetFile.getPath() );
+    Throwable pathNotFound = null;
+    try {
+      repo.getFile( targetFile.getPath() );
+    } catch ( Throwable e ) {
+      while ( e != null ) {
+        if (e instanceof PathNotFoundException) {
+          pathNotFound = e;
+          e = null;
+        } else {
+          e = e.getCause();
+        }
+      }
+    }
+    assertNotNull( pathNotFound );
   }
 
 
