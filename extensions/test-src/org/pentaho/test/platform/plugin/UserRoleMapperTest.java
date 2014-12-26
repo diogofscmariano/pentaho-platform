@@ -21,6 +21,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.pentaho.platform.api.data.IDBDatasourceService;
 import org.pentaho.platform.api.engine.IConnectionUserRoleMapper;
 import org.pentaho.platform.api.engine.IPentahoDefinableObjectFactory.Scope;
@@ -46,6 +47,7 @@ import org.pentaho.platform.plugin.action.mondrian.mapper.MondrianUserSessionUse
 import org.pentaho.platform.plugin.services.connections.mondrian.MDXConnection;
 import org.pentaho.platform.plugin.services.connections.sql.SQLConnection;
 import org.pentaho.platform.repository2.unified.fs.FileSystemBackedUnifiedRepository;
+import org.pentaho.platform.repository2.unified.jcr.IDatasourceAclHelper;
 import org.pentaho.test.platform.engine.core.MicroPlatform;
 import org.springframework.dao.DataAccessException;
 import org.springframework.security.Authentication;
@@ -58,10 +60,13 @@ import org.springframework.security.userdetails.UsernameNotFoundException;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+
+import static org.mockito.Mockito.*;
 
 @SuppressWarnings( "nls" )
 public class UserRoleMapperTest {
@@ -70,10 +75,14 @@ public class UserRoleMapperTest {
 
   @Before
   public void init0() {
+    IDatasourceAclHelper aclHelper = mock( IDatasourceAclHelper.class );
+    when( aclHelper.canAccess( anyString(), any( EnumSet.class ) ) ).thenReturn( true );
+    MondrianCatalogHelper catalogService = new MondrianCatalogHelper( aclHelper );
+
     microPlatform = new MicroPlatform( "test-src/solution" );
     microPlatform.define( ISolutionEngine.class, SolutionEngine.class );
     microPlatform.define( IUnifiedRepository.class, FileSystemBackedUnifiedRepository.class, Scope.GLOBAL );
-    microPlatform.define( IMondrianCatalogService.class, MondrianCatalogHelper.class, Scope.GLOBAL );
+    microPlatform.defineInstance( IMondrianCatalogService.class, catalogService );
     microPlatform.define( "connection-SQL", SQLConnection.class );
     microPlatform.define( "connection-MDX", MDXConnection.class );
     microPlatform.define( IDBDatasourceService.class, JndiDatasourceService.class, Scope.GLOBAL );
@@ -88,9 +97,8 @@ public class UserRoleMapperTest {
       Assert.fail();
     }
 
-    MondrianCatalogHelper catalogService = (MondrianCatalogHelper) PentahoSystem.get( IMondrianCatalogService.class );
     catalogService.setDataSourcesConfig( "file:"
-        + PentahoSystem.getApplicationContext().getSolutionPath( "test/analysis/test-datasources.xml" ) );
+      + PentahoSystem.getApplicationContext().getSolutionPath( "test/analysis/test-datasources.xml" ) );
 
     // JNDI
     System.setProperty( "java.naming.factory.initial", "org.osjava.sj.SimpleContextFactory" );

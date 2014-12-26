@@ -223,6 +223,13 @@ public class MondrianCatalogHelper implements IAclAwareMondrianCatalogService {
         .get( IMondrianCatalogService.class, "IMondrianCatalogService", null ); //$NON-NLS-1$
   }
 
+  @VisibleForTesting
+  @Deprecated
+  public MondrianCatalogHelper(IDatasourceAclHelper aclHelper) {
+    this();
+    this.aclHelper = aclHelper;
+  }
+
   public MondrianCatalogHelper() {
     this( false );
   }

@@ -2,6 +2,7 @@ package org.pentaho.platform.repository2.unified.jcr;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.pentaho.platform.api.mt.ITenant;
@@ -116,6 +117,7 @@ public class JcrAclNodeHelperTest extends DefaultUnifiedRepositoryBase {
   }
 
   @Test
+  @Ignore
   public void aclIsReplaced() throws InterruptedException {
     loginAsRepositoryAdmin();
     RepositoryFileAcl acl = createAclFor( USERNAME_TIFFANY );
