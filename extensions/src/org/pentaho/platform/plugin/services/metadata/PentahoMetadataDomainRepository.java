@@ -63,7 +63,7 @@ import java.util.*;
  * @author <a href="mailto:dkincade@pentaho.com">David M. Kincade</a>
  */
 public class PentahoMetadataDomainRepository implements IMetadataDomainRepository,
-    IAclAwarePentahoMetadataDomainRepositoryImporter, IPentahoMetadataDomainRepositoryExporter, IDomainFileResolver {
+    IAclAwarePentahoMetadataDomainRepositoryImporter, IPentahoMetadataDomainRepositoryExporter {
   // The logger for this class
   private static final Log logger = LogFactory.getLog( PentahoMetadataDomainRepository.class );
 
@@ -710,10 +710,6 @@ public class PentahoMetadataDomainRepository implements IMetadataDomainRepositor
       domainFile = metadataMapping.getDomainFile( domainId );
     }
     return domainFile;
-  }
-
-  @Override public RepositoryFile resolveDomainFileFor( String domainId ) {
-    return getMetadataRepositoryFile( domainId );
   }
 
   /**
