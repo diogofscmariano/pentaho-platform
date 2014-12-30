@@ -202,8 +202,8 @@ public class MondrianCatalogHelperTest {
     MondrianCatalog cat = createTestCatalog();
     RepositoryFileAcl acl = mock( RepositoryFileAcl.class );
 
-    IDatasourceAclHelper aclHelper = mock( IDatasourceAclHelper.class );
-    doNothing().when( aclHelper ).setAclFor( CATALOG_NAME, acl );
+    IAclNodeHelper aclHelper = mock( IAclNodeHelper.class );
+    doNothing().when( aclHelper ).setAclFor( any( RepositoryFile.class ), eq( acl ) );
     doReturn( aclHelper ).when( helperSpy ).getAclHelper();
     doReturn( null ).when( helperSpy ).makeSchema( CATALOG_NAME );
 
@@ -212,7 +212,7 @@ public class MondrianCatalogHelperTest {
 
     helperSpy.addCatalog( new ByteArrayInputStream( new byte[0] ), cat, true, acl, session );
 
-    verify( aclHelper, times( 1 ) ).setAclFor( CATALOG_NAME, acl );
+    verify( aclHelper, times( 1 ) ).setAclFor( any( RepositoryFile.class ), eq(acl) );
   }
 
   @Test
@@ -288,8 +288,8 @@ public class MondrianCatalogHelperTest {
 
     helper = spy( helper );
 
-    IDatasourceAclHelper aclHelper = mock( IDatasourceAclHelper.class );
-    when( aclHelper.canAccess( anyString(), any( EnumSet.class ) ) ).thenReturn( true );
+    IAclNodeHelper aclHelper = mock( IAclNodeHelper.class );
+    when( aclHelper.canAccess( any( RepositoryFile.class ), any( EnumSet.class ) ) ).thenReturn( true );
     doReturn( aclHelper ).when( helper ).getAclHelper();
 
     MondrianCatalog[] testCatalogs = new MondrianCatalog[] { spy( createTestCatalog() ), spy( createTestCatalog() ) };
@@ -325,9 +325,12 @@ public class MondrianCatalogHelperTest {
     IPentahoSession session = new StandaloneSession( "admin" );
 
     helper = spy( helper );
-    IDatasourceAclHelper aclHelper = mock( IDatasourceAclHelper.class );
-    when( aclHelper.canAccess( anyString(), any( EnumSet.class ) ) ).thenReturn( true );
+    IAclNodeHelper aclHelper = mock( IAclNodeHelper.class );
+    when( aclHelper.canAccess( any( RepositoryFile.class ), any( EnumSet.class ) ) ).thenReturn( true );
     doReturn( aclHelper ).when( helper ).getAclHelper();
+
+    MondrianCatalogRepositoryHelper repositoryHelper = mock( MondrianCatalogRepositoryHelper.class );
+    doReturn( repositoryHelper ).when( helper ).getMondrianCatalogRepositoryHelper();
 
     helper.removeCatalog( "mondrian:/SteelWheels", session );
 
@@ -342,8 +345,11 @@ public class MondrianCatalogHelperTest {
     doReturn( createTestCatalog() ).when( helper ).getCatalog( eq( CATALOG_NAME ), eq( session ) );
     doNothing().when( helper ).reInit( eq( session ) );
 
-    IDatasourceAclHelper aclHelper = mock( IDatasourceAclHelper.class );
-    when( aclHelper.canAccess( eq(CATALOG_NAME), any( EnumSet.class ) ) ).thenReturn( true );
+    MondrianCatalogRepositoryHelper repositoryHelper = mock( MondrianCatalogRepositoryHelper.class );
+    doReturn( repositoryHelper ).when( helper ).getMondrianCatalogRepositoryHelper();
+
+    IAclNodeHelper aclHelper = mock( IAclNodeHelper.class );
+    when( aclHelper.canAccess( any( RepositoryFile.class ), any( EnumSet.class ) ) ).thenReturn( true );
     doReturn( aclHelper ).when( helper ).getAclHelper();
 
     RepositoryFile file = mock( RepositoryFile.class );
@@ -352,7 +358,7 @@ public class MondrianCatalogHelperTest {
 
     helper.removeCatalog( CATALOG_NAME, session );
 
-    verify( aclHelper ).removeAclFor( CATALOG_NAME );
+    verify( aclHelper ).removeAclFor( any( RepositoryFile.class ) );
   }
 
   @Test(expected = MondrianCatalogServiceException.class)
@@ -363,8 +369,11 @@ public class MondrianCatalogHelperTest {
     doReturn( createTestCatalog() ).when( helper ).getCatalog( eq( CATALOG_NAME ), eq( session ) );
     doNothing().when( helper ).reInit( eq( session ) );
 
-    IDatasourceAclHelper aclHelper = mock( IDatasourceAclHelper.class );
-    when( aclHelper.canAccess( eq(CATALOG_NAME), any( EnumSet.class ) ) ).thenReturn( false );
+    MondrianCatalogRepositoryHelper repositoryHelper = mock( MondrianCatalogRepositoryHelper.class );
+    doReturn( repositoryHelper ).when( helper ).getMondrianCatalogRepositoryHelper();
+
+    IAclNodeHelper aclHelper = mock( IAclNodeHelper.class );
+    when( aclHelper.canAccess( any( RepositoryFile.class ), any( EnumSet.class ) ) ).thenReturn( false );
     doReturn( aclHelper ).when( helper ).getAclHelper();
 
     helper.removeCatalog( CATALOG_NAME, session );

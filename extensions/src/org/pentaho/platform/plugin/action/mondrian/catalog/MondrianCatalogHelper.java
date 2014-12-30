@@ -53,6 +53,7 @@ import org.pentaho.platform.api.data.IDBDatasourceService;
 import org.pentaho.platform.api.engine.ICacheManager;
 import org.pentaho.platform.api.engine.IPentahoSession;
 import org.pentaho.platform.api.engine.ObjectFactoryException;
+import org.pentaho.platform.api.repository2.unified.IAclNodeHelper;
 import org.pentaho.platform.api.repository2.unified.IUnifiedRepository;
 import org.pentaho.platform.api.repository2.unified.RepositoryFile;
 import org.pentaho.platform.api.repository2.unified.RepositoryFileAcl;
@@ -70,7 +71,7 @@ import org.pentaho.platform.plugin.services.importexport.legacy.MondrianCatalogR
 import org.pentaho.platform.repository.solution.filebased.MondrianVfs;
 import org.pentaho.platform.repository.solution.filebased.SolutionRepositoryVfsFileObject;
 import org.pentaho.platform.repository2.ClientRepositoryPaths;
-import org.pentaho.platform.repository2.unified.jcr.IDatasourceAclHelper;
+import org.pentaho.platform.repository2.unified.jcr.JcrAclNodeHelper;
 import org.pentaho.platform.util.logging.Logger;
 import org.pentaho.platform.util.messages.LocaleHelper;
 import org.pentaho.platform.util.xml.dom4j.XmlDom4JHelper;
@@ -134,7 +135,8 @@ public class MondrianCatalogHelper implements IAclAwareMondrianCatalogService {
    */
   private final boolean useLegacyDbName;
 
-  private IDatasourceAclHelper aclHelper;
+  private IAclNodeHelper aclHelper;
+  private MondrianCatalogRepositoryHelper catalogRepositoryHelper;
 
   public static final String MONDRIAN_DATASOURCE_FOLDER = "mondrian"; //$NON-NLS-1$
 
@@ -225,7 +227,7 @@ public class MondrianCatalogHelper implements IAclAwareMondrianCatalogService {
 
   @VisibleForTesting
   @Deprecated
-  public MondrianCatalogHelper(IDatasourceAclHelper aclHelper) {
+  public MondrianCatalogHelper(IAclNodeHelper aclHelper) {
     this();
     this.aclHelper = aclHelper;
   }
@@ -642,7 +644,7 @@ public class MondrianCatalogHelper implements IAclAwareMondrianCatalogService {
     reInit( pentahoSession );
 
     if ( acl != null ) {
-      getAclHelper().setAclFor( catalog.getName(), acl );
+      getAclHelper().setAclFor( getMondrianCatalogRepositoryHelper().getMondrianCatalogFile( catalog.getName() ), acl );
     }
   }
 
@@ -650,13 +652,16 @@ public class MondrianCatalogHelper implements IAclAwareMondrianCatalogService {
     return PentahoSystem.get( IUnifiedRepository.class );
   }
 
-  protected MondrianCatalogRepositoryHelper getMondrianCatalogRepositoryHelper() {
-    return new MondrianCatalogRepositoryHelper( PentahoSystem.get( IUnifiedRepository.class ) );
+  protected synchronized MondrianCatalogRepositoryHelper getMondrianCatalogRepositoryHelper() {
+    if (catalogRepositoryHelper == null) {
+      catalogRepositoryHelper = new MondrianCatalogRepositoryHelper( PentahoSystem.get( IUnifiedRepository.class ) );
+    }
+    return catalogRepositoryHelper;
   }
 
-  protected synchronized IDatasourceAclHelper getAclHelper() {
+  public synchronized IAclNodeHelper getAclHelper() {
     if ( aclHelper == null ) {
-      aclHelper = new JcrMondrianAclHelper(  );
+      aclHelper = new JcrAclNodeHelper( PentahoSystem.get( IUnifiedRepository.class ) );
     }
     return aclHelper;
   }
@@ -1028,7 +1033,7 @@ public class MondrianCatalogHelper implements IAclAwareMondrianCatalogService {
    * Why is this class even enforcing security anyway!?
    */
   protected boolean hasAccess( MondrianCatalog cat, RepositoryFilePermission permission ) {
-    return getAclHelper().canAccess( cat.getName(), EnumSet.of( permission ) );
+    return getAclHelper().canAccess( getMondrianCatalogRepositoryHelper().getMondrianCatalogFile( cat.getName() ), EnumSet.of( permission ) );
   }
 
   protected String getSolutionRepositoryRelativePath( final String path, final IPentahoSession pentahoSession ) {
@@ -1147,7 +1152,7 @@ public class MondrianCatalogHelper implements IAclAwareMondrianCatalogService {
           "MondrianCatalogHelper.ERROR_0003_INSUFFICIENT_PERMISSION" ), Reason.ACCESS_DENIED ); //$NON-NLS-1$
     }
 
-    getAclHelper().removeAclFor( catalog.getName() );
+    getAclHelper().removeAclFor( getMondrianCatalogRepositoryHelper().getMondrianCatalogFile( catalog.getName() ) );
 
     IUnifiedRepository solutionRepository = getRepository();
     RepositoryFile deletingFile = solutionRepository.getFile( RepositoryFile.SEPARATOR + "etc" //$NON-NLS-1$

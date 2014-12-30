@@ -21,7 +21,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.pentaho.platform.api.data.IDBDatasourceService;
 import org.pentaho.platform.api.engine.IConnectionUserRoleMapper;
 import org.pentaho.platform.api.engine.IPentahoDefinableObjectFactory.Scope;
@@ -30,7 +29,9 @@ import org.pentaho.platform.api.engine.ISolutionEngine;
 import org.pentaho.platform.api.engine.IUserRoleListService;
 import org.pentaho.platform.api.engine.PentahoAccessControlException;
 import org.pentaho.platform.api.mt.ITenant;
+import org.pentaho.platform.api.repository2.unified.IAclNodeHelper;
 import org.pentaho.platform.api.repository2.unified.IUnifiedRepository;
+import org.pentaho.platform.api.repository2.unified.RepositoryFile;
 import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.engine.core.system.boot.PlatformInitializationException;
@@ -47,7 +48,6 @@ import org.pentaho.platform.plugin.action.mondrian.mapper.MondrianUserSessionUse
 import org.pentaho.platform.plugin.services.connections.mondrian.MDXConnection;
 import org.pentaho.platform.plugin.services.connections.sql.SQLConnection;
 import org.pentaho.platform.repository2.unified.fs.FileSystemBackedUnifiedRepository;
-import org.pentaho.platform.repository2.unified.jcr.IDatasourceAclHelper;
 import org.pentaho.test.platform.engine.core.MicroPlatform;
 import org.springframework.dao.DataAccessException;
 import org.springframework.security.Authentication;
@@ -75,8 +75,8 @@ public class UserRoleMapperTest {
 
   @Before
   public void init0() {
-    IDatasourceAclHelper aclHelper = mock( IDatasourceAclHelper.class );
-    when( aclHelper.canAccess( anyString(), any( EnumSet.class ) ) ).thenReturn( true );
+    IAclNodeHelper aclHelper = mock( IAclNodeHelper.class );
+    when( aclHelper.canAccess( any( RepositoryFile.class ), any( EnumSet.class ) ) ).thenReturn( true );
     MondrianCatalogHelper catalogService = new MondrianCatalogHelper( aclHelper );
 
     microPlatform = new MicroPlatform( "test-src/solution" );

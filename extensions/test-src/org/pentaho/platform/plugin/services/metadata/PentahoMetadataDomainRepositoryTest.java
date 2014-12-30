@@ -30,12 +30,10 @@ import org.pentaho.metadata.util.XmiParser;
 import org.pentaho.platform.api.engine.IPentahoSession;
 import org.pentaho.platform.api.repository2.unified.IUnifiedRepository;
 import org.pentaho.platform.api.repository2.unified.RepositoryFile;
-import org.pentaho.platform.api.repository2.unified.RepositoryFilePermission;
 import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
 import org.pentaho.platform.repository2.unified.RepositoryUtils;
 import org.pentaho.platform.repository2.unified.fs.FileSystemBackedUnifiedRepository;
 import org.pentaho.platform.api.repository2.unified.IAclNodeHelper;
-import org.pentaho.platform.repository2.unified.jcr.IDatasourceAclHelper;
 import org.pentaho.test.platform.repository2.unified.MockUnifiedRepository;
 
 import java.io.ByteArrayInputStream;
@@ -104,11 +102,9 @@ public class PentahoMetadataDomainRepositoryTest extends TestCase {
   }
 
 
-  private IDatasourceAclHelper mockAclNodeHelper() {
-    IDatasourceAclHelper helper = mock( IDatasourceAclHelper.class );
-    when( helper.canAccess( anyString(), any( EnumSet.class ) )).thenReturn( true );
-    when( helper.canRead( anyString() )).thenReturn( true );
-    when( helper.canWrite( anyString() )).thenReturn( true );
+  private IAclNodeHelper mockAclNodeHelper() {
+    IAclNodeHelper helper = mock( IAclNodeHelper.class );
+    when( helper.canAccess( any( RepositoryFile.class ), any( EnumSet.class ) )).thenReturn( true );
     return helper;
   }
 
