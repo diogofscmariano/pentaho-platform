@@ -622,7 +622,7 @@ public class MondrianCatalogHelper implements IAclAwareMondrianCatalogService {
       IOUtils.copy( schemaInputStream, writer, "UTF8" );
       String catalogStr = writer.toString();
       makeSchema( catalogStr );
-      schemaInputStream = new ByteArrayInputStream( catalogStr.getBytes() );
+      schemaInputStream = new ByteArrayInputStream( catalogStr.getBytes( "UTF-8" ) );
     } catch ( Exception ex ) {
       throw new MondrianCatalogServiceException( Messages.getInstance().getErrorString(
           "MondrianCatalogHelper.ERROR_0008_ERROR_OCCURRED" ), //$NON-NLS-1$
