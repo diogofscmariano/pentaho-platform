@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.pentaho.platform.api.mt.ITenant;
 import org.pentaho.platform.api.repository2.unified.RepositoryFile;
+import org.pentaho.platform.api.repository2.unified.RepositoryFileAce;
 import org.pentaho.platform.api.repository2.unified.RepositoryFileAcl;
 import org.pentaho.platform.api.repository2.unified.RepositoryFilePermission;
 import org.pentaho.platform.api.repository2.unified.RepositoryFileSid;
@@ -195,6 +196,23 @@ public class JcrAclNodeHelperTest extends DefaultUnifiedRepositoryBase {
     assertNotNull( pathNotFound );
   }
 
+  @Test
+  public void administratorRoleIsAdded() {
+    makeDsPrivate();
+    loginAsSuzy();
+
+    RepositoryFileAcl aclReturned = helper.getAclFor( targetFile );
+    boolean adminPresent = false;
+
+    for( RepositoryFileAce ace : aclReturned.getAces() ){
+      if( ace.getSid().getName() == tenantAdminRoleName ) {
+        adminPresent = true;
+        break;
+      }
+    }
+
+    assertTrue( adminPresent );
+  }
 
   private void makeDsPrivate() {
     loginAsRepositoryAdmin();
