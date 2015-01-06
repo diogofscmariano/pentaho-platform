@@ -117,7 +117,6 @@ public class JcrAclNodeHelperTest extends DefaultUnifiedRepositoryBase {
   }
 
   @Test
-  @Ignore
   public void aclIsReplaced() throws InterruptedException {
     loginAsRepositoryAdmin();
     RepositoryFileAcl acl = createAclFor( USERNAME_TIFFANY );

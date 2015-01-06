@@ -83,7 +83,7 @@ public class JcrAclNodeHelper implements IAclNodeHelper {
 
     // Check to see if user has READ access to file, this will throw and exception if not.
     try {
-      unifiedRepository.getFile( aclNode.getPath() );
+      unifiedRepository.getFileById( aclNode.getId() );
     } catch ( Exception e ) {
       logger.warn( "Error checking access for file", e );
       return false;
