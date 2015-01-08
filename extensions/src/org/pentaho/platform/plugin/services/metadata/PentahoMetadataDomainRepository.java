@@ -267,9 +267,7 @@ public class PentahoMetadataDomainRepository implements IMetadataDomainRepositor
     // This invalidates any caching
     flushDomains();
 
-    if ( acl != null ) {
-      getAclHelper().setAclFor( newDomainFile, acl );
-    }
+    getAclHelper().setAclFor( newDomainFile, acl );
   }
 
   public synchronized IAclNodeHelper getAclHelper() {
@@ -281,10 +279,6 @@ public class PentahoMetadataDomainRepository implements IMetadataDomainRepositor
 
   @Override public RepositoryFile getDomainRepositoryFile( String domainId ) {
     return getMetadataRepositoryFile( domainId );
-  }
-
-  protected void setAclHelper( IAclNodeHelper helper ) {
-    this.aclHelper = helper;
   }
 
   /*
@@ -327,11 +321,11 @@ public class PentahoMetadataDomainRepository implements IMetadataDomainRepositor
         "PentahoMetadataDomainRepository.ERROR_0004_DOMAIN_ID_INVALID", domainId ) );
     }
     Domain domain = null;
-    if ( getAclHelper().canAccess( getMetadataRepositoryFile( domainId ), EnumSet.of( RepositoryFilePermission.READ ) ) ) {
-      try {
-        // Load the domain file
-        final RepositoryFile file = getMetadataRepositoryFile( domainId );
-        if ( file != null ) {
+    try {
+      // Load the domain file
+      final RepositoryFile file = getMetadataRepositoryFile( domainId );
+      if ( file != null ) {
+        if ( getAclHelper().canAccess( file, EnumSet.of( RepositoryFilePermission.READ ) ) ) {
           SimpleRepositoryFileData data = repository.getDataForRead( file.getId(), SimpleRepositoryFileData.class );
           if ( data != null ) {
             domain = xmiParser.parseXmi( data.getStream() );
@@ -342,14 +336,17 @@ public class PentahoMetadataDomainRepository implements IMetadataDomainRepositor
             logger.debug( "loaded I18N bundles" );
           } else {
             throw new UnifiedRepositoryException( messages.getErrorString(
-                "PentahoMetadataDomainRepository.ERROR_0005_ERROR_RETRIEVING_DOMAIN", domainId, "not found" ) );
+                "PentahoMetadataDomainRepository.ERROR_0005_ERROR_RETRIEVING_DOMAIN", domainId, "data not found" ) );
           }
+        } else {
+          throw new UnifiedRepositoryException( messages.getErrorString(
+              "PentahoMetadataDomainRepository.ERROR_0005_ERROR_RETRIEVING_DOMAIN", domainId, "access denied" ) );
         }
-      } catch ( Exception e ) {
-        throw new UnifiedRepositoryException( messages.getErrorString(
-            "PentahoMetadataDomainRepository.ERROR_0005_ERROR_RETRIEVING_DOMAIN",
-            domainId, e.getLocalizedMessage() ), e );
       }
+    } catch ( Exception e ) {
+      throw new UnifiedRepositoryException( messages.getErrorString(
+          "PentahoMetadataDomainRepository.ERROR_0005_ERROR_RETRIEVING_DOMAIN",
+          domainId, e.getLocalizedMessage() ), e );
     }
 
     // Return

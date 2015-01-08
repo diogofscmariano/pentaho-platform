@@ -643,9 +643,7 @@ public class MondrianCatalogHelper implements IAclAwareMondrianCatalogService {
     }
     reInit( pentahoSession );
 
-    if ( acl != null ) {
-      getAclHelper().setAclFor( getMondrianCatalogRepositoryHelper().getMondrianCatalogFile( catalog.getName() ), acl );
-    }
+    getAclHelper().setAclFor( getMondrianCatalogRepositoryHelper().getMondrianCatalogFile( catalog.getName() ), acl );
   }
 
   protected IUnifiedRepository getRepository() {

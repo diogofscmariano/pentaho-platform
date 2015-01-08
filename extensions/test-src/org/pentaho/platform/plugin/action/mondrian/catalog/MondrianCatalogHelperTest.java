@@ -166,7 +166,13 @@ public class MondrianCatalogHelperTest {
     File file = new File( "test-src/solution/test/charts/steelwheels.mondrian.xml" );
     String mondrianSchema = IOUtils.toString( new FileInputStream( file ) );
     session.setAttribute( "MONDRIAN_SCHEMA_XML_CONTENT", mondrianSchema );
-    helper.addCatalog( cat, false, session );
+
+    MondrianCatalogHelper helperSpy = spy( helper );
+    IAclNodeHelper aclNodeHelper = mock( IAclNodeHelper.class );
+    doNothing().when( aclNodeHelper ).setAclFor( any( RepositoryFile.class ), any( RepositoryFileAcl.class ) );
+    doReturn( aclNodeHelper ).when( helperSpy ).getAclHelper();
+
+    helperSpy.addCatalog( cat, false, session );
 
     verify( repo ).createFile(
         eq( makeIdObject( steelWheelsFolderPath ) ),
@@ -199,13 +205,17 @@ public class MondrianCatalogHelperTest {
     doNothing().when( aclHelper ).setAclFor( any( RepositoryFile.class ), eq( acl ) );
     doReturn( aclHelper ).when( helperSpy ).getAclHelper();
     doReturn( null ).when( helperSpy ).makeSchema( CATALOG_NAME );
+    doReturn( true ).when( helperSpy ).catalogExists( any( MondrianCatalog.class ), eq( session ) );
 
     MondrianCatalogRepositoryHelper repositoryHelper = mock( MondrianCatalogRepositoryHelper.class );
     doReturn( repositoryHelper ).when( helperSpy ).getMondrianCatalogRepositoryHelper();
 
     helperSpy.addCatalog( new ByteArrayInputStream( new byte[0] ), cat, true, acl, session );
+    verify( aclHelper, times( 1 ) ).setAclFor( any( RepositoryFile.class ), eq( acl ) );
 
-    verify( aclHelper, times( 1 ) ).setAclFor( any( RepositoryFile.class ), eq(acl) );
+    doNothing().when( aclHelper ).setAclFor( any( RepositoryFile.class ), any( RepositoryFileAcl.class ) );
+    helperSpy.addCatalog( new ByteArrayInputStream( new byte[0] ), cat, true, null, session );
+    verify( aclHelper, times( 2 ) ).setAclFor( any( RepositoryFile.class ), any( RepositoryFileAcl.class ) );
   }
 
   @Test
