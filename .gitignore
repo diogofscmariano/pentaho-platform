@@ -5,3 +5,4 @@ extensions/test-src/connections-solution/test/tmp/
 extensions/test-src/solution/test/tmp/
 .idea/workspace.xml
 build-utils/dist
+build-utils/lib

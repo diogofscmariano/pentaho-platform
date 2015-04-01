@@ -65,4 +65,36 @@
       <arg value="${jmeter.dir}/out.csv" />
     </java>
   </target>
+  
+  <property name="lib-wadl.dir" value="${lib.dir}-wadl" />
+
+  <target name="wadl-javadoc" depends="javadoc.init, compile, subfloor.install-ivy">
+    <mkdir dir="${lib-wadl.dir}"/>
+
+    <ivy:resolve organisation="com.sun.jersey" module="jersey-server" revision="1.16" inline="true" transitive="false" />
+    <ivy:retrieve organisation="com.sun.jersey" module="jersey-server" revision="1.16" inline="true" transitive="false" pattern="${lib-wadl.dir}/[artifact]-[type]-[revision].[ext]" />
+
+    <ivy:resolve organisation="xerces" module="xercesImpl" revision="2.9.1" inline="true" transitive="false"/>
+    <ivy:retrieve organisation="xerces" module="xercesImpl" revision="2.9.1" inline="true" transitive="false" pattern="${lib-wadl.dir}/[artifact]-[type]-[revision].[ext]"/>
+
+    <ivy:resolve organisation="com.sun.jersey.contribs" module="wadl-resourcedoc-doclet" revision="1.19" inline="true" transitive="false"/>
+    <ivy:retrieve organisation="com.sun.jersey.contribs" module="wadl-resourcedoc-doclet" revision="1.19" inline="true" transitive="false" pattern="${lib-wadl.dir}/[artifact]-[type]-[revision].[ext]" />
+
+    <ivy:resolve organisation="pentaho" module="pentaho-platform-build-utils" revision="${project.revision}" inline="true" transitive="false" />
+    <ivy:retrieve organisation="pentaho" module="pentaho-platform-build-utils" revision="${project.revision}" inline="true" transitive="false" pattern="${lib-wadl.dir}/[artifact]-[type]-[revision].[ext]"/>
+    
+    <javadoc sourcepath="${basedir}/src"
+             access="public"
+             source="6"
+             postProcessGeneratedJavadocs="false"
+             packagenames="*">
+      <classpath refid="classpath" />
+      <doclet name="org.pentaho.wadl.PentahoResourceDoclet" path="${lib-wadl.dir}/jersey-server-jar-1.16.jar;${lib-wadl.dir}/xercesImpl-jar-2.9.1.jar;${lib-wadl.dir}/wadl-resourcedoc-doclet-jar-1.19.jar;${lib-wadl.dir}/pentaho-platform-build-utils-jar-TRUNK-SNAPSHOT.jar">
+      </doclet>
+    </javadoc>
+    
+    <move file="wadlExtension.xml" todir="dist/"/>
+    
+    <delete dir="${lib-wadl.dir}"/>
+  </target>
 </project>
