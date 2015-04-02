@@ -6,3 +6,4 @@ extensions/test-src/solution/test/tmp/
 .idea/workspace.xml
 build-utils/dist
 build-utils/lib
+extensions/lib-wadl
