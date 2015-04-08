@@ -65,20 +65,14 @@
       <arg value="${jmeter.dir}/out.csv" />
     </java>
   </target>
-  
-  <property name="lib-wadl.dir" value="${lib.dir}-wadl" />
 
-  <target name="resolve-wadl" depends="resolve-init">
-    <ivy:resolve file="${ivyfile}" conf="wadl" />
-    <ivy:retrieve conf="wadl" pattern="${lib-wadl.dir}/[module]-[revision](-[classifier]).[ext]" symlink="${ivy.use.symlinks.internal}" />
+  <target name="compile.post" depends="subfloor.compile.post" >
+    <antcall target="wadl-javadoc"/>
   </target>
 
-  <target name="wadl-javadoc" depends="javadoc.init, resolve-wadl">
+  <target name="wadl-javadoc" depends="javadoc.init">
     <javadoc sourcepath="${basedir}/src" access="public" source="6" postProcessGeneratedJavadocs="false" packagenames="*">
       <classpath id="wadl-lib">
-        <fileset dir="${lib-wadl.dir}">
-          <include name="*.jar" />
-        </fileset>
         <fileset dir="${lib.dir}">
           <include name="*.jar" />
         </fileset>
@@ -86,6 +80,6 @@
       <doclet name="org.pentaho.wadl.PentahoResourceDoclet" pathref="wadl-lib" />
     </javadoc>
     
-    <move file="wadlExtension.xml" todir="dist/"/>
+    <move file="wadlExtension.xml" todir="${bin.dir}/classes/META-INF/wadl"/>
   </target>
 </project>

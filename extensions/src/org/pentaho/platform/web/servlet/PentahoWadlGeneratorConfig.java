@@ -1,14 +1,14 @@
 package org.pentaho.platform.web.servlet;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.pentaho.platform.api.engine.IPluginManager;
+import org.pentaho.platform.api.util.IWadlDocumentResource;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
 
 import com.sun.jersey.api.wadl.config.WadlGeneratorConfig;
@@ -16,8 +16,6 @@ import com.sun.jersey.api.wadl.config.WadlGeneratorDescription;
 import com.sun.jersey.server.wadl.generators.resourcedoc.WadlGeneratorResourceDocSupport;
 
 public class PentahoWadlGeneratorConfig extends WadlGeneratorConfig {
-
-  private static final String WADL_RESOURCE_FILE = "wadlExtension.xml";
 
   private String getOriginalRequest() {
     JAXRSPluginServlet jaxrsPluginServlet = getJAXRSPluginServlet();
@@ -32,21 +30,27 @@ public class PentahoWadlGeneratorConfig extends WadlGeneratorConfig {
   }
 
   private WadlGeneratorConfigDescriptionBuilder getBuilder( String plugin ) {
-    String systemPath = PentahoSystem.getApplicationContext().getSolutionPath( "system" );
+    List<IWadlDocumentResource> resourceReferences = PentahoSystem.getAll( IWadlDocumentResource.class );
 
-    File file;
-    if ( plugin != null ) {
-      file = new File( systemPath, plugin + "/resources/" + WADL_RESOURCE_FILE );
-    } else {
-      file = new File( systemPath, WADL_RESOURCE_FILE );
-    }
-
+    InputStream is = null;
     try {
-      FileInputStream fileInputStream = new FileInputStream( file );
-      return generator( WadlGeneratorResourceDocSupport.class ).prop( "resourceDocStream", fileInputStream );
-    } catch ( FileNotFoundException e ) {
+      for ( IWadlDocumentResource wadlDocumentResource : resourceReferences ) {
+        if ( plugin == null && !wadlDocumentResource.isFromPlugin() ) {
+          is = wadlDocumentResource.getResourceAsStream();
+          break;
+        } else if ( wadlDocumentResource.isFromPlugin() && wadlDocumentResource.getPluginId().equals( plugin ) ) {
+          is = wadlDocumentResource.getResourceAsStream();
+          break;
+        }
+      }
+    } catch ( IOException e ) {
       e.printStackTrace();
     }
+
+    if ( is != null ) {
+      return generator( WadlGeneratorResourceDocSupport.class ).prop( "resourceDocStream", is );
+    }
+
     return null;
   }
 
