@@ -12,8 +12,10 @@ import org.pentaho.wadl.helpers.DefaultRootDoc;
 public class PentahoResourceDocletTest {
 
   private final String EXPECTED_WADL_FILE_CONTENT =
-      "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n"
-          + "<resourceDoc><classDocs><classDoc><methodDocs><methodDoc><methodName>methodName</methodName><commentText><![CDATA[<visibility>Public</visibility><deprecated>true</deprecated><documentation>comment text</documentation>]]></commentText></methodDoc></methodDocs></classDoc></classDocs></resourceDoc>\r\n";
+      "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + System.lineSeparator() + "<resourceDoc><classDocs><classDoc>"
+          + "<methodDocs><methodDoc><methodName>methodName</methodName><commentText><![CDATA[<visibility>Public"
+          + "</visibility><deprecated>true</deprecated><documentation>comment text</documentation>]]></commentText>"
+          + "</methodDoc></methodDocs></classDoc></classDocs></resourceDoc>" + System.lineSeparator();
 
   private final String FILE_NAME = "wadlExtension.xml";
 
