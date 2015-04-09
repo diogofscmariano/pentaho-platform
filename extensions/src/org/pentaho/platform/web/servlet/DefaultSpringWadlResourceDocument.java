@@ -4,7 +4,6 @@ import org.pentaho.platform.api.util.IWadlDocumentResource;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.plugin.services.pluginmgr.PluginClassLoader;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 
 import java.io.IOException;
@@ -14,23 +13,19 @@ import java.util.Enumeration;
 
 
 public class DefaultSpringWadlResourceDocument implements IWadlDocumentResource {
-  Resource springResource;
+  ClassPathResource springResource;
   String pluginId = "";
   boolean isPlugin = false;
 
   private static String WADL_NAME = "META-INF/wadl/wadlExtension.xml";
 
   public DefaultSpringWadlResourceDocument( Resource resource ) {
-    this.springResource = resource;
+    this.springResource = (ClassPathResource) resource;
 
     //identify if is plugin
-    if ( this.springResource instanceof FileSystemResource ) {
-      isPlugin = false;
-    } else if ( springResource instanceof ClassPathResource
-        && ( (ClassPathResource) springResource ).getClassLoader() instanceof PluginClassLoader ) {
+    if ( springResource.getClassLoader() instanceof PluginClassLoader ) {
       isPlugin = true;
-      pluginId = ( (PluginClassLoader) ( (ClassPathResource) springResource )
-          .getClassLoader() ).getPluginDir().getName();
+      pluginId = ( (PluginClassLoader) springResource.getClassLoader() ).getPluginDir().getName();
     }
   }
 
@@ -38,12 +33,12 @@ public class DefaultSpringWadlResourceDocument implements IWadlDocumentResource 
   public InputStream getResourceAsStream() throws IOException {
     Enumeration<URL> urls;
 
-    urls = ( (ClassPathResource) springResource ).getClassLoader().getResources( WADL_NAME );
+    urls = springResource.getClassLoader().getResources( WADL_NAME );
 
     InputStream is = null;
     URL url = null;
 
-    String systemPath = PentahoSystem.getApplicationContext().getSolutionPath( "system" );
+    String systemPath = getSystemPath();
 
     while ( urls.hasMoreElements() ) {
       url = urls.nextElement();
@@ -59,13 +54,21 @@ public class DefaultSpringWadlResourceDocument implements IWadlDocumentResource 
 
     if ( url != null ) {
       try {
-        is = url.openConnection().getInputStream();
+        is = getInputStream( url );
       } catch ( IOException e ) {
         e.printStackTrace();
       }
     }
 
     return is;
+  }
+
+  protected String getSystemPath() {
+    return PentahoSystem.getApplicationContext().getSolutionPath( "system" );
+  }
+
+  protected InputStream getInputStream( URL url ) throws IOException {
+    return url.openConnection().getInputStream();
   }
 
   @Override
