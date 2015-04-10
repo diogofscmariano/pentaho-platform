@@ -20,7 +20,6 @@ package org.pentaho.platform.web.servlet;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;
@@ -29,13 +28,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.sun.jersey.api.wadl.config.WadlGeneratorConfig;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.pentaho.platform.api.engine.IApplicationContext;
-import org.pentaho.platform.api.engine.IPluginManager;
 import org.pentaho.platform.api.util.IWadlDocumentResource;
-import org.pentaho.platform.engine.core.system.PentahoSystem;
 
 import com.sun.jersey.api.wadl.config.WadlGeneratorDescription;
 
@@ -108,8 +103,6 @@ public class PentahoWadlGeneratorConfigTest {
 
   @Test
   public void testGetBuilder() throws Exception {
-    WadlGeneratorConfig.WadlGeneratorConfigDescriptionBuilder result;
-
     List<IWadlDocumentResource> list = new ArrayList<IWadlDocumentResource>();
     IWadlDocumentResource documentResource1 = mock( IWadlDocumentResource.class ),
         documentResource2 = mock( IWadlDocumentResource.class ),

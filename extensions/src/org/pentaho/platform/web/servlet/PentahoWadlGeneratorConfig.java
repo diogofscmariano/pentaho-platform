@@ -110,7 +110,7 @@ public class PentahoWadlGeneratorConfig extends WadlGeneratorConfig {
   }
 
   /**
-   * Gets the getJAXRSPluginServlet for api that stores the the original request for the wadl
+   * Gets the JAXRSPluginServlet for api that stores the the original request for the wadl
    *
    * @return JAXRSPluginServlet with the stored original request
    */
