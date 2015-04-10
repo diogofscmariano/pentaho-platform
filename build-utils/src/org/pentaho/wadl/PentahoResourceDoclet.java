@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 
+import com.sun.jersey.wadl.resourcedoc.ResourceDoclet;
 import org.apache.xml.serialize.OutputFormat;
 import org.apache.xml.serialize.XMLSerializer;
 
@@ -19,9 +20,9 @@ import com.sun.jersey.server.wadl.generators.resourcedoc.model.MethodDocType;
 import com.sun.jersey.server.wadl.generators.resourcedoc.model.ResourceDocType;
 import com.sun.jersey.wadl.resourcedoc.DocProcessorWrapper;
 
-public class PentahoResourceDoclet {
-
-  private static final String OUTPUT = "wadlExtension.xml";
+public class PentahoResourceDoclet extends ResourceDoclet {
+  private static final String OUTPUT_FILE_NAME = "wadlExtension.xml";
+  private static final String OUTPUT_PATH_PARAM = "-output";
 
   private static boolean isDeprecated( AnnotationDesc[] annotationDescs ) {
     for ( AnnotationDesc annotationDesc : annotationDescs ) {
@@ -62,7 +63,7 @@ public class PentahoResourceDoclet {
   }
 
   public static boolean start( RootDoc root ) {
-    final String output = OUTPUT;
+    final String outputPath = getOutputPath( root.options() );
     final DocProcessorWrapper docProcessor = new DocProcessorWrapper();
 
     final ResourceDocType result = new ResourceDocType();
@@ -91,7 +92,7 @@ public class PentahoResourceDoclet {
       final JAXBContext c = JAXBContext.newInstance( clazzes );
       final Marshaller m = c.createMarshaller();
       m.setProperty( Marshaller.JAXB_FORMATTED_OUTPUT, true );
-      final OutputStream out = new BufferedOutputStream( new FileOutputStream( output ) );
+      final OutputStream out = new BufferedOutputStream( new FileOutputStream( outputPath ) );
       final XMLSerializer serializer = getXMLSerializer( out );
       m.marshal( result, serializer );
       out.close();
@@ -109,6 +110,18 @@ public class PentahoResourceDoclet {
     XMLSerializer serializer = new XMLSerializer( of );
     serializer.setOutputByteStream( os );
     return serializer;
+  }
+
+  private static String getOutputPath( String[][] optionsMap ) {
+    for ( int i = 0; i < optionsMap.length; i++ ) {
+      String[] option = optionsMap[i];
+
+      if ( option[0].equals( OUTPUT_PATH_PARAM ) ) {
+        return option[1];
+      }
+    }
+
+    return OUTPUT_FILE_NAME;
   }
 
 }
